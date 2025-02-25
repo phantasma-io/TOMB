@@ -186,7 +186,7 @@ namespace Phantasma.Tomb
             if (string.IsNullOrEmpty(sourceFileName))
             {
                 compilingBuiltins = true;
-                sourceFileName = @"..\..\..\builtins.tomb";
+                sourceFileName = @"../../../builtins.tomb";
             }
 #else
             if (string.IsNullOrEmpty(sourceFileName))
