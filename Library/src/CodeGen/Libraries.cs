@@ -261,6 +261,38 @@ namespace Phantasma.Tomb.CodeGen
                         libDecl.AddMethod("set", MethodImplementationType.Custom, VarKind.None, new[] { new MethodParameter("array", VarKind.Any), new MethodParameter("index", VarKind.Number), new MethodParameter("value", VarType.Generic(0)) });
                         libDecl.AddMethod("remove", MethodImplementationType.Custom, VarKind.None, new[] { new MethodParameter("array", VarKind.Any), new MethodParameter("index", VarKind.Number) });
                         libDecl.AddMethod("clear", MethodImplementationType.Custom, VarKind.None, new[] { new MethodParameter("array", VarKind.Any) });
+                        libDecl.AddMethod("push", MethodImplementationType.Custom, VarKind.None, new[] { new MethodParameter("array", VarKind.Any), new MethodParameter("value", VarType.Generic(0)) })
+                            .SetPreCallback((output, scope, expr) =>
+                            {
+                                var arrayReg = expr.arguments[0].GenerateCode(output);
+                                var elem = expr.arguments[1].GenerateCode(output);
+                                var sizeReg = Compiler.Instance.AllocRegister(output, expr);
+
+                                output.AppendLine(expr, $"COUNT {arrayReg} {sizeReg}");
+                                output.AppendLine(expr, $"PUT {elem} {arrayReg} {sizeReg}");
+
+                                Compiler.Instance.DeallocRegister(ref sizeReg);
+                                Compiler.Instance.DeallocRegister(ref elem);
+                                return arrayReg;
+                            });
+                        libDecl.AddMethod("pop", MethodImplementationType.Custom, VarType.Generic(0),
+                                new[] { new MethodParameter("array", VarKind.Any) })
+                            .SetPreCallback((output, scope, expr) =>
+                            {
+                                var arrayReg = expr.arguments[0].GenerateCode(output);
+                                var sizeReg = Compiler.Instance.AllocRegister(output, expr);
+
+                                output.AppendLine(expr, $"COUNT {arrayReg} {sizeReg}");
+                                output.AppendLine(expr, $"DEC {sizeReg}");
+
+                                var elementReg = Compiler.Instance.AllocRegister(output, expr);
+                                output.AppendLine(expr, $"GET {arrayReg} {elementReg} {sizeReg}");
+                                output.AppendLine(expr, $"REMOVE {arrayReg} {sizeReg}");
+
+                                Compiler.Instance.DeallocRegister(ref sizeReg);
+                                Compiler.Instance.DeallocRegister(ref arrayReg);
+                                return elementReg;
+                            }).SetPostCallback(ConvertGenericResult);
 
                         return libDecl;
                     }
@@ -406,6 +438,24 @@ namespace Phantasma.Tomb.CodeGen
                         output.AppendLine(expr, $"MAX {regA} {regA} {regB}");
                         Compiler.Instance.DeallocRegister(ref regB);
                         return regA;
+                    });
+                    libDecl.AddMethod("abs", MethodImplementationType.Custom, VarKind.Number, new[] { new MethodParameter("val", VarKind.Number) }).
+                    SetPreCallback((output, scope, expr) =>
+                    {
+                        var reg = expr.arguments[0].GenerateCode(output);
+                        output.AppendLine(expr, $"ABS {reg} {reg}");
+                        return reg;
+                    });
+                    libDecl.AddMethod("pow", MethodImplementationType.Custom, VarKind.Number, new[] { new MethodParameter("val", VarKind.Number), new MethodParameter("exp", VarKind.Number) }).
+                    SetPreCallback((output, scope, expr) =>
+                    {
+                        var regResult = Compiler.Instance.AllocRegister(output, expr);
+                        var regA = expr.arguments[0].GenerateCode(output);
+                        var regB = expr.arguments[1].GenerateCode(output);
+                        output.AppendLine(expr, $"POW {regA} {regB} {regResult}");
+                        Compiler.Instance.DeallocRegister(ref regA);
+                        Compiler.Instance.DeallocRegister(ref regB);
+                        return regResult;
                     });
 
                     // NOTE those are builtins, so they are no longer declared here
