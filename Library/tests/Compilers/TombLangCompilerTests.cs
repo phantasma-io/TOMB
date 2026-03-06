@@ -7,7 +7,7 @@ using Phantasma.Business.Blockchain.Contracts.Native;
 
 public class TombLangCompilerTests
 {
-    private const string UnsupportedAccountContract = @"
+	private const string UnsupportedAccountContract = @"
 contract test {
     import Account;
     public run(from:address)
@@ -16,7 +16,7 @@ contract test {
     }
 }";
 
-    private const string SupportedStakeContract = @"
+	private const string SupportedStakeContract = @"
 contract test {
     import Stake;
     public run(from:address)
@@ -25,7 +25,7 @@ contract test {
     }
 }";
 
-    private const string DynamicUnsupportedAccountMethodContract = @"
+	private const string DynamicUnsupportedAccountMethodContract = @"
 contract test {
     import Call;
     public run(from:address)
@@ -34,7 +34,7 @@ contract test {
     }
 }";
 
-    private const string DynamicSupportedStakeMethodContract = @"
+	private const string DynamicSupportedStakeMethodContract = @"
 contract test {
     import Call;
     public run(from:address)
@@ -43,7 +43,7 @@ contract test {
     }
 }";
 
-    private const string DynamicNonLiteralTargetContract = @"
+	private const string DynamicNonLiteralTargetContract = @"
 contract test {
     import Call;
     public run(from:address, contractName:string)
@@ -52,7 +52,7 @@ contract test {
     }
 }";
 
-    private const string DynamicUnsupportedAccountMethodViaContractLibrary = @"
+	private const string DynamicUnsupportedAccountMethodViaContractLibrary = @"
 contract test {
     import Contract;
     public run(from:address)
@@ -61,7 +61,7 @@ contract test {
     }
 }";
 
-    private const string DynamicSupportedStakeMethodViaContractLibrary = @"
+	private const string DynamicSupportedStakeMethodViaContractLibrary = @"
 contract test {
     import Contract;
     public run(from:address)
@@ -70,7 +70,7 @@ contract test {
     }
 }";
 
-    private const string DynamicNonLiteralTargetViaContractLibrary = @"
+	private const string DynamicNonLiteralTargetViaContractLibrary = @"
 contract test {
     import Contract;
     public run(from:address, contractName:string)
@@ -79,7 +79,7 @@ contract test {
     }
 }";
 
-    private const string ArrayLengthPropertyContract = @"
+	private const string ArrayLengthPropertyContract = @"
 contract test {
     import Array;
     public run():number
@@ -89,7 +89,7 @@ contract test {
     }
 }";
 
-    private const string StructConstructorAfterImportContract = @"
+	private const string StructConstructorAfterImportContract = @"
 struct MyLocalStruct {
     name:string;
     age:number;
@@ -104,7 +104,7 @@ contract test{
     }
 }";
 
-    private const string ForLoopScopeContract = @"
+	private const string ForLoopScopeContract = @"
 contract test {
     public run():number
     {
@@ -119,7 +119,7 @@ contract test {
     }
 }";
 
-    private const string TokenCreateRuntimeSignatureContract = @"
+	private const string TokenCreateRuntimeSignatureContract = @"
 contract test {
     import Token;
     public run(from:address)
@@ -128,261 +128,261 @@ contract test {
     }
 }";
 
-    private NativeCheckMode _originalMode;
-    private Action<string> _originalWarningHandler = null!;
-    private List<string> _warnings = null!;
+	private NativeCheckMode _originalMode;
+	private Action<string> _originalWarningHandler = null!;
+	private List<string> _warnings = null!;
 
-    private static readonly (Type Type, string Contract)[] PlaceholderContracts =
-    {
-        (typeof(AccountContract), "account"),
-        (typeof(GovernanceContract), "governance"),
-        (typeof(MailContract), "mail"),
-        (typeof(MarketContract), "market"),
-        (typeof(RankingContract), "ranking"),
-        (typeof(RelayContract), "relay"),
-        (typeof(SaleContract), "sale"),
-        (typeof(StakeContract), "stake"),
-        (typeof(StorageContract), "storage"),
-    };
+	private static readonly (Type Type, string Contract)[] PlaceholderContracts =
+	{
+		(typeof(AccountContract), "account"),
+		(typeof(GovernanceContract), "governance"),
+		(typeof(MailContract), "mail"),
+		(typeof(MarketContract), "market"),
+		(typeof(RankingContract), "ranking"),
+		(typeof(RelayContract), "relay"),
+		(typeof(SaleContract), "sale"),
+		(typeof(StakeContract), "stake"),
+		(typeof(StorageContract), "storage"),
+	};
 
-    [SetUp]
-    public void SetUp()
-    {
-        _originalMode = Compiler.NativeCheckMode;
-        _originalWarningHandler = Compiler.WarningHandler;
-        _warnings = new List<string>();
-        Compiler.WarningHandler = warning => _warnings.Add(warning);
-    }
+	[SetUp]
+	public void SetUp()
+	{
+		_originalMode = Compiler.NativeCheckMode;
+		_originalWarningHandler = Compiler.WarningHandler;
+		_warnings = new List<string>();
+		Compiler.WarningHandler = warning => _warnings.Add(warning);
+	}
 
-    [TearDown]
-    public void TearDown()
-    {
-        Compiler.NativeCheckMode = _originalMode;
-        Compiler.WarningHandler = _originalWarningHandler;
-    }
+	[TearDown]
+	public void TearDown()
+	{
+		Compiler.NativeCheckMode = _originalMode;
+		Compiler.WarningHandler = _originalWarningHandler;
+	}
 
-    [Test]
-    public void UnsupportedNativeMethod_DefaultErrorMode_Throws()
-    {
-        // Default policy is strict: known-missing native methods must fail compilation.
-        Compiler.NativeCheckMode = NativeCheckMode.Error;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void UnsupportedNativeMethod_DefaultErrorMode_Throws()
+	{
+		// Default policy is strict: known-missing native methods must fail compilation.
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
 
-        var ex = Assert.Throws<CompilerException>(() => parser.Process(UnsupportedAccountContract));
+		var ex = Assert.Throws<CompilerException>(() => parser.Process(UnsupportedAccountContract));
 
-        Assert.That(ex, Is.Not.Null);
-        Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
-        Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
-    }
+		Assert.That(ex, Is.Not.Null);
+		Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
 
-    [Test]
-    public void UnsupportedNativeMethod_WarnMode_CompilesAndWarnsOnce()
-    {
-        // Warn mode keeps compilation successful but emits one actionable warning per method.
-        Compiler.NativeCheckMode = NativeCheckMode.Warn;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void UnsupportedNativeMethod_WarnMode_CompilesAndWarnsOnce()
+	{
+		// Warn mode keeps compilation successful but emits one actionable warning per method.
+		Compiler.NativeCheckMode = NativeCheckMode.Warn;
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(UnsupportedAccountContract);
+		var modules = parser.Process(UnsupportedAccountContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-        Assert.That(_warnings.Count, Is.EqualTo(1));
-        Assert.That(_warnings[0], Does.Contain("account.RegisterName"));
-        Assert.That(_warnings[0], Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings.Count, Is.EqualTo(1));
+		Assert.That(_warnings[0], Does.Contain("account.RegisterName"));
+		Assert.That(_warnings[0], Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
 
-    [Test]
-    public void UnsupportedNativeMethod_OffMode_CompilesWithoutWarning()
-    {
-        // Off mode fully disables availability checks for workflows that need unrestricted emission.
-        Compiler.NativeCheckMode = NativeCheckMode.Off;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void UnsupportedNativeMethod_OffMode_CompilesWithoutWarning()
+	{
+		// Off mode fully disables availability checks for workflows that need unrestricted emission.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(UnsupportedAccountContract);
+		var modules = parser.Process(UnsupportedAccountContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-        Assert.That(_warnings, Is.Empty);
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
 
-    [Test]
-    public void SupportedStakeMethod_ErrorMode_CompilesWithoutWarning()
-    {
-        // Supported native methods should remain unaffected by strict error mode.
-        Compiler.NativeCheckMode = NativeCheckMode.Error;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void SupportedStakeMethod_ErrorMode_CompilesWithoutWarning()
+	{
+		// Supported native methods should remain unaffected by strict error mode.
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(SupportedStakeContract);
+		var modules = parser.Process(SupportedStakeContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-        Assert.That(_warnings, Is.Empty);
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
 
-    [Test]
-    public void ArrayLengthProperty_Compiles()
-    {
-        // Regression guard for lexer tokenization: arr.length() must stay a property call,
-        // not a malformed numeric token.
-        Compiler.NativeCheckMode = NativeCheckMode.Off;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void ArrayLengthProperty_Compiles()
+	{
+		// Regression guard for lexer tokenization: arr.length() must stay a property call,
+		// not a malformed numeric token.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(ArrayLengthPropertyContract);
+		var modules = parser.Process(ArrayLengthPropertyContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+	}
 
-    [Test]
-    public void StructConstructorAfterImport_Compiles()
-    {
-        // Importing Struct must preserve generated constructors like Struct.MyLocalStruct(...).
-        var parser = new TombLangCompiler();
+	[Test]
+	public void StructConstructorAfterImport_Compiles()
+	{
+		// Importing Struct must preserve generated constructors like Struct.MyLocalStruct(...).
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(StructConstructorAfterImportContract);
+		var modules = parser.Process(StructConstructorAfterImportContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+	}
 
-    [Test]
-    public void ForLoopScope_DoesNotLeakLoopVariable()
-    {
-        // Regression guard: "for (local i ...)" must not pollute parent scope.
-        // Redeclaring i after the loop should compile.
-        var parser = new TombLangCompiler();
+	[Test]
+	public void ForLoopScope_DoesNotLeakLoopVariable()
+	{
+		// Regression guard: "for (local i ...)" must not pollute parent scope.
+		// Redeclaring i after the loop should compile.
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(ForLoopScopeContract);
+		var modules = parser.Process(ForLoopScopeContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+	}
 
-    [Test]
-    public void TokenCreate_UsesRuntimeThreeArgumentSignature()
-    {
-        // Regression guard for Nexus.CreateToken mapping: Token.create must use
-        // (from, script, abiBytes) to match runtime interop arity.
-        var parser = new TombLangCompiler();
+	[Test]
+	public void TokenCreate_UsesRuntimeThreeArgumentSignature()
+	{
+		// Regression guard for Nexus.CreateToken mapping: Token.create must use
+		// (from, script, abiBytes) to match runtime interop arity.
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(TokenCreateRuntimeSignatureContract);
+		var modules = parser.Process(TokenCreateRuntimeSignatureContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+	}
 
-    [Test]
-    public void DynamicNativeMethod_ErrorMode_ThrowsForMissingMethod()
-    {
-        // Dynamic contract calls with literal native targets must be validated like direct wrappers.
-        Compiler.NativeCheckMode = NativeCheckMode.Error;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void DynamicNativeMethod_ErrorMode_ThrowsForMissingMethod()
+	{
+		// Dynamic contract calls with literal native targets must be validated like direct wrappers.
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
 
-        var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicUnsupportedAccountMethodContract));
+		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicUnsupportedAccountMethodContract));
 
-        Assert.That(ex, Is.Not.Null);
-        Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
-        Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
-    }
+		Assert.That(ex, Is.Not.Null);
+		Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
 
-    [Test]
-    public void DynamicNativeMethod_ErrorMode_CompilesForSupportedMethod()
-    {
-        // Literal dynamic calls to supported native methods should compile in strict mode.
-        Compiler.NativeCheckMode = NativeCheckMode.Error;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void DynamicNativeMethod_ErrorMode_CompilesForSupportedMethod()
+	{
+		// Literal dynamic calls to supported native methods should compile in strict mode.
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(DynamicSupportedStakeMethodContract);
+		var modules = parser.Process(DynamicSupportedStakeMethodContract);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-        Assert.That(_warnings, Is.Empty);
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
 
-    [Test]
-    public void DynamicNativeMethod_ErrorMode_ThrowsForNonLiteralTarget()
-    {
-        // Without literal target names the compiler cannot prove availability against the snapshot.
-        Compiler.NativeCheckMode = NativeCheckMode.Error;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void DynamicNativeMethod_ErrorMode_ThrowsForNonLiteralTarget()
+	{
+		// Without literal target names the compiler cannot prove availability against the snapshot.
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
 
-        var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicNonLiteralTargetContract));
+		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicNonLiteralTargetContract));
 
-        Assert.That(ex, Is.Not.Null);
-        Assert.That(ex!.Message, Does.Contain("is not a literal contract/method pair"));
-        Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
-    }
+		Assert.That(ex, Is.Not.Null);
+		Assert.That(ex!.Message, Does.Contain("is not a literal contract/method pair"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
 
-    [Test]
-    public void DynamicNativeMethod_ContractLibrary_ErrorMode_ThrowsForMissingMethod()
-    {
-        // Contract.call(...) must be validated exactly like Call.contract(...).
-        Compiler.NativeCheckMode = NativeCheckMode.Error;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void DynamicNativeMethod_ContractLibrary_ErrorMode_ThrowsForMissingMethod()
+	{
+		// Contract.call(...) must be validated exactly like Call.contract(...).
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
 
-        var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicUnsupportedAccountMethodViaContractLibrary));
+		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicUnsupportedAccountMethodViaContractLibrary));
 
-        Assert.That(ex, Is.Not.Null);
-        Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
-        Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
-    }
+		Assert.That(ex, Is.Not.Null);
+		Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
 
-    [Test]
-    public void DynamicNativeMethod_ContractLibrary_ErrorMode_CompilesForSupportedMethod()
-    {
-        // Supported native targets must remain usable through Contract.call(...).
-        Compiler.NativeCheckMode = NativeCheckMode.Error;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void DynamicNativeMethod_ContractLibrary_ErrorMode_CompilesForSupportedMethod()
+	{
+		// Supported native targets must remain usable through Contract.call(...).
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
 
-        var modules = parser.Process(DynamicSupportedStakeMethodViaContractLibrary);
+		var modules = parser.Process(DynamicSupportedStakeMethodViaContractLibrary);
 
-        Assert.That(modules.Length, Is.EqualTo(1));
-        Assert.That(_warnings, Is.Empty);
-    }
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
 
-    [Test]
-    public void DynamicNativeMethod_ContractLibrary_WarnMode_EmitsWarningBeforeLiteralRequirementFailure()
-    {
-        // Warn mode still reports unresolved dynamic targets, but generation currently
-        // requires literal contract selectors for this gateway.
-        Compiler.NativeCheckMode = NativeCheckMode.Warn;
-        var parser = new TombLangCompiler();
+	[Test]
+	public void DynamicNativeMethod_ContractLibrary_WarnMode_EmitsWarningBeforeLiteralRequirementFailure()
+	{
+		// Warn mode still reports unresolved dynamic targets, but generation currently
+		// requires literal contract selectors for this gateway.
+		Compiler.NativeCheckMode = NativeCheckMode.Warn;
+		var parser = new TombLangCompiler();
 
-        var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicNonLiteralTargetViaContractLibrary));
+		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicNonLiteralTargetViaContractLibrary));
 
-        Assert.That(ex, Is.Not.Null);
-        Assert.That(ex!.Message, Does.Contain("can't be converted to String literal"));
-        Assert.That(_warnings.Count, Is.EqualTo(1));
-        Assert.That(_warnings[0], Does.Contain("Contract.call"));
-        Assert.That(_warnings[0], Does.Contain("is not a literal contract/method pair"));
-        Assert.That(_warnings[0], Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
-    }
+		Assert.That(ex, Is.Not.Null);
+		Assert.That(ex!.Message, Does.Contain("can't be converted to String literal"));
+		Assert.That(_warnings.Count, Is.EqualTo(1));
+		Assert.That(_warnings[0], Does.Contain("Contract.call"));
+		Assert.That(_warnings[0], Does.Contain("is not a literal contract/method pair"));
+		Assert.That(_warnings[0], Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
 
-    [Test]
-    public void Snapshot_CoversAllBridgePlaceholderMethods()
-    {
-        // Every placeholder method must have an explicit Available/Missing status in the snapshot.
-        var missingStatuses = new List<string>();
+	[Test]
+	public void Snapshot_CoversAllBridgePlaceholderMethods()
+	{
+		// Every placeholder method must have an explicit Available/Missing status in the snapshot.
+		var missingStatuses = new List<string>();
 
-        foreach (var (type, contract) in PlaceholderContracts)
-        {
-            var methods = type.GetMethods(System.Reflection.BindingFlags.Public |
-                                          System.Reflection.BindingFlags.Static |
-                                          System.Reflection.BindingFlags.DeclaredOnly);
+		foreach (var (type, contract) in PlaceholderContracts)
+		{
+			var methods = type.GetMethods(System.Reflection.BindingFlags.Public |
+										  System.Reflection.BindingFlags.Static |
+										  System.Reflection.BindingFlags.DeclaredOnly);
 
-            foreach (var method in methods)
-            {
-                if (!NativeMethodAvailability.TryGetSnapshotStatus(contract, method.Name, out _))
-                {
-                    missingStatuses.Add($"{contract}.{method.Name}");
-                }
-            }
-        }
+			foreach (var method in methods)
+			{
+				if (!NativeMethodAvailability.TryGetSnapshotStatus(contract, method.Name, out _))
+				{
+					missingStatuses.Add($"{contract}.{method.Name}");
+				}
+			}
+		}
 
-        Assert.That(missingStatuses, Is.Empty,
-            "Native snapshot is incomplete. Missing entries: " + string.Join(", ", missingStatuses));
-    }
+		Assert.That(missingStatuses, Is.Empty,
+			"Native snapshot is incomplete. Missing entries: " + string.Join(", ", missingStatuses));
+	}
 
-    [Test]
-    public void Snapshot_TracksStakeClaimAsAvailable_AndMasterCountAsMissing()
-    {
-        // Spot-check two stake methods with opposite runtime states to validate snapshot semantics.
-        Assert.That(NativeMethodAvailability.TryGetSnapshotStatus("stake", "Claim", out var claimEntry), Is.True);
-        Assert.That(claimEntry.Presence, Is.EqualTo(NativeMethodPresence.Available));
+	[Test]
+	public void Snapshot_TracksStakeClaimAsAvailable_AndMasterCountAsMissing()
+	{
+		// Spot-check two stake methods with opposite runtime states to validate snapshot semantics.
+		Assert.That(NativeMethodAvailability.TryGetSnapshotStatus("stake", "Claim", out var claimEntry), Is.True);
+		Assert.That(claimEntry.Presence, Is.EqualTo(NativeMethodPresence.Available));
 
-        Assert.That(NativeMethodAvailability.TryGetSnapshotStatus("stake", "GetMasterCount", out var masterCountEntry), Is.True);
-        Assert.That(masterCountEntry.Presence, Is.EqualTo(NativeMethodPresence.Missing));
-    }
+		Assert.That(NativeMethodAvailability.TryGetSnapshotStatus("stake", "GetMasterCount", out var masterCountEntry), Is.True);
+		Assert.That(masterCountEntry.Presence, Is.EqualTo(NativeMethodPresence.Missing));
+	}
 }

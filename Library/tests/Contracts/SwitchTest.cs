@@ -11,11 +11,11 @@ namespace TOMBLib.Tests.Contracts;
 
 public class SwitchTest
 {
-    [Test]
-    public void SwitchNumber()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void SwitchNumber()
+	{
+		var sourceCode =
+			@"
 contract test {
     public check(x:number): string {
         switch (x) {
@@ -26,41 +26,41 @@ contract test {
         }
      }}";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        var check = contract.abi.FindMethod("check");
-        Assert.IsNotNull(check);
+		var check = contract.abi.FindMethod("check");
+		Assert.IsNotNull(check);
 
-        // test different cases
-        for (int i = -1; i <= 4; i++)
-        {
-            var vm = new TestVM(contract, storage, check);
-            vm.Stack.Push(VMObject.FromObject(i));
-            var state = vm.Execute();
-            Assert.IsTrue(state == ExecutionState.Halt);
-            var result = vm.Stack.Pop().AsString();
+		// test different cases
+		for (int i = -1; i <= 4; i++)
+		{
+			var vm = new TestVM(contract, storage, check);
+			vm.Stack.Push(VMObject.FromObject(i));
+			var state = vm.Execute();
+			Assert.IsTrue(state == ExecutionState.Halt);
+			var result = vm.Stack.Pop().AsString();
 
-            string expected;
-            switch (i)
-            {
-                case 0: expected = "zero"; break;
-                case 1: expected = "one"; break;
-                case 2: expected = "two"; break;
-                default: expected = "other"; break;
-            }
+			string expected;
+			switch (i)
+			{
+				case 0: expected = "zero"; break;
+				case 1: expected = "one"; break;
+				case 2: expected = "two"; break;
+				default: expected = "other"; break;
+			}
 
-            Assert.IsTrue(result == expected);
-        }
-    }
+			Assert.IsTrue(result == expected);
+		}
+	}
 
-    [Test]
-    public void TestSwitchString()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void TestSwitchString()
+	{
+		var sourceCode =
+			@"
 contract test {
     public check(x:string): number {
         switch (x) {
@@ -71,47 +71,47 @@ contract test {
         }
      }}";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        var check = contract.abi.FindMethod("check");
-        Assert.IsNotNull(check);
+		var check = contract.abi.FindMethod("check");
+		Assert.IsNotNull(check);
 
-        // test different cases
-        for (int i = 0; i <= 4; i++)
-        {
-            var vm = new TestVM(contract, storage, check);
-            var str = i.ToString();
-            switch (i)
-            {
-                case 0: str = "zero"; break;
-                case 1: str = "one"; break;
-                case 2: str = "two"; break;
-                default: str = "other"; break;
-            }
+		// test different cases
+		for (int i = 0; i <= 4; i++)
+		{
+			var vm = new TestVM(contract, storage, check);
+			var str = i.ToString();
+			switch (i)
+			{
+				case 0: str = "zero"; break;
+				case 1: str = "one"; break;
+				case 2: str = "two"; break;
+				default: str = "other"; break;
+			}
 
-            vm.Stack.Push(VMObject.FromObject(str));
-            var state = vm.Execute();
-            Assert.IsTrue(state == ExecutionState.Halt);
-            var result = vm.Stack.Pop().AsNumber();
+			vm.Stack.Push(VMObject.FromObject(str));
+			var state = vm.Execute();
+			Assert.IsTrue(state == ExecutionState.Halt);
+			var result = vm.Stack.Pop().AsNumber();
 
-            BigInteger expected = i;
-            if ( i > 2 )
-            {
-                expected = 99;
-            }
+			BigInteger expected = i;
+			if (i > 2)
+			{
+				expected = 99;
+			}
 
-            Assert.AreEqual(expected, result);
-        }
-    }
+			Assert.That(result, Is.EqualTo(expected));
+		}
+	}
 
-    [Test]
-    public void TestSwitchDecimal()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void TestSwitchDecimal()
+	{
+		var sourceCode =
+			@"
 contract test {
     import Runtime;
     public check(x:decimal<2>): decimal<2> {
@@ -122,42 +122,42 @@ contract test {
         }
      }}";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        var check = contract.abi.FindMethod("check");
-        Assert.IsNotNull(check);
+		var check = contract.abi.FindMethod("check");
+		Assert.IsNotNull(check);
 
-        // test different cases
-        for (int i = 0; i <= 4; i++)
-        {
-            var vm = new TestVM(contract, storage, check);
-            decimal _value = 1.1m;
-            switch (i)
-            {
-                case 0: _value = 1.00m; break;
-                case 1: _value = 1.10m; break;
-                default: _value = 5.00m; break;
-            }
+		// test different cases
+		for (int i = 0; i <= 4; i++)
+		{
+			var vm = new TestVM(contract, storage, check);
+			decimal _value = 1.1m;
+			switch (i)
+			{
+				case 0: _value = 1.00m; break;
+				case 1: _value = 1.10m; break;
+				default: _value = 5.00m; break;
+			}
 
-            vm.Stack.Push(VMObject.FromObject(UnitConversion.ToBigInteger(_value, 2)));
-            var state = vm.Execute();
-            Assert.IsTrue(state == ExecutionState.Halt);
-            var obj = vm.Stack.Pop();
-            var result = obj.AsNumber();
-            var resultConverted = UnitConversion.ToDecimal(result, 2);
+			vm.Stack.Push(VMObject.FromObject(UnitConversion.ToBigInteger(_value, 2)));
+			var state = vm.Execute();
+			Assert.IsTrue(state == ExecutionState.Halt);
+			var obj = vm.Stack.Pop();
+			var result = obj.AsNumber();
+			var resultConverted = UnitConversion.ToDecimal(result, 2);
 
-            decimal expected = _value;
-            switch (i)
-            {
-                case 0: expected = 1.00m ; break;
-                case 1: expected = 1.10m; break;
-                default: expected = 5.00m; break;
-            }
+			decimal expected = _value;
+			switch (i)
+			{
+				case 0: expected = 1.00m; break;
+				case 1: expected = 1.10m; break;
+				default: expected = 5.00m; break;
+			}
 
-             Assert.AreEqual(expected, resultConverted);
-        }
-    }
+			Assert.That(resultConverted, Is.EqualTo(expected));
+		}
+	}
 }

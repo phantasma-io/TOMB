@@ -12,128 +12,128 @@ namespace TOMBLib.Tests.Contracts;
 
 public class StringTests
 {
-    [Test]
-    public void StringsSimple()
-    {
-        var str = "hello";
+	[Test]
+	public void StringsSimple()
+	{
+		var str = "hello";
 
-        var sourceCode =
-            "contract test{\n" +
-            "global name: string;\n" +
-            "constructor(owner:address)	{\n" +
-            "name= \"" + str + "\";\n}" +
-            "public getLength():number {\n" +
-            "return name.length();\n" +
-            "}}\n";
+		var sourceCode =
+			"contract test{\n" +
+			"global name: string;\n" +
+			"constructor(owner:address)	{\n" +
+			"name= \"" + str + "\";\n}" +
+			"public getLength():number {\n" +
+			"return name.length();\n" +
+			"}}\n";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
-        Assert.IsNotNull(constructor);
+		var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
+		Assert.IsNotNull(constructor);
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        vm = new TestVM(contract, storage, constructor);
-        vm.Stack.Push(VMObject.FromObject(keys.Address));
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, constructor);
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
+		Assert.IsTrue(storage.Count == 1);
 
-        // call getLength
-        var getLength = contract.abi.FindMethod("getLength");
-        Assert.IsNotNull(getLength);
+		// call getLength
+		var getLength = contract.abi.FindMethod("getLength");
+		Assert.IsNotNull(getLength);
 
-        vm = new TestVM(contract, storage, getLength);
-        result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, getLength);
+		result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
+		Assert.IsTrue(storage.Count == 1);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        var obj = vm.Stack.Pop();
-        var len = obj.AsNumber();
+		var obj = vm.Stack.Pop();
+		var len = obj.AsNumber();
 
-        var expectedLength = str.Length;
+		var expectedLength = str.Length;
 
-        Assert.IsTrue(len == expectedLength);
-    }
+		Assert.IsTrue(len == expectedLength);
+	}
 
-    [Test]
-    public void UpdateStringMethod()
-    {
-        string[] sourceCode = new string[]
-        {
-            "token TEST  {",
-            "property name:string = \"Unit test\";",
-            "   global _feesSymbol:string;",
-            $"  property feesSymbol:string = _feesSymbol;",
-            "   constructor(owner:address)	{",
-            "       _feesSymbol = \"KCAL\";",
-            "}",
-            "public updateFeesSymbol(feesSymbol:string) {",
-            "   _feesSymbol= feesSymbol;",
-            "}",
-            "}"
-        };
+	[Test]
+	public void UpdateStringMethod()
+	{
+		string[] sourceCode = new string[]
+		{
+			"token TEST  {",
+			"property name:string = \"Unit test\";",
+			"   global _feesSymbol:string;",
+			$"  property feesSymbol:string = _feesSymbol;",
+			"   constructor(owner:address)	{",
+			"       _feesSymbol = \"KCAL\";",
+			"}",
+			"public updateFeesSymbol(feesSymbol:string) {",
+			"   _feesSymbol= feesSymbol;",
+			"}",
+			"}"
+		};
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
-        Assert.IsNotNull(constructor);
+		var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
+		Assert.IsNotNull(constructor);
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        vm = new TestVM(contract, storage, constructor);
-        vm.Stack.Push(VMObject.FromObject(keys.Address));
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, constructor);
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
+		Assert.IsTrue(storage.Count == 1);
 
-        // call updateFeesSymbol
-        var updateValue = contract.abi.FindMethod("updateFeesSymbol");
-        Assert.IsNotNull(updateValue);
+		// call updateFeesSymbol
+		var updateValue = contract.abi.FindMethod("updateFeesSymbol");
+		Assert.IsNotNull(updateValue);
 
-        vm = new TestVM(contract, storage, updateValue);
-        vm.Stack.Push(VMObject.FromObject("SOUL"));
-        result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, updateValue);
+		vm.Stack.Push(VMObject.FromObject("SOUL"));
+		result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
+		Assert.IsTrue(storage.Count == 1);
 
-        // call getFeesSymbol
-        var getValue = contract.abi.FindMethod("getFeesSymbol");
-        Assert.IsNotNull(getValue);
+		// call getFeesSymbol
+		var getValue = contract.abi.FindMethod("getFeesSymbol");
+		Assert.IsNotNull(getValue);
 
-        vm = new TestVM(contract, storage, getValue);
-        result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, getValue);
+		result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        var obj = vm.Stack.Pop();
-        var newVal = obj.AsString();
-        var expectedVal = "SOUL";
+		var obj = vm.Stack.Pop();
+		var newVal = obj.AsString();
+		var expectedVal = "SOUL";
 
-        Assert.IsTrue(newVal == expectedVal);
-    }
+		Assert.IsTrue(newVal == expectedVal);
+	}
 
-    [Test]
-    public void StringManipulation()
-    {
-        var sourceCode = @"
+	[Test]
+	public void StringManipulation()
+	{
+		var sourceCode = @"
 contract arrays {
     import Array;
 
@@ -175,42 +175,42 @@ contract arrays {
 }
 ";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var test = contract.abi.FindMethod("test");
-        Assert.IsNotNull(test);
+		var test = contract.abi.FindMethod("test");
+		Assert.IsNotNull(test);
 
-        vm = new TestVM(contract, storage, test);
-        vm.Stack.Push(VMObject.FromObject(2));
-        vm.Stack.Push(VMObject.FromObject("ABCD"));
-        var state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, test);
+		vm.Stack.Push(VMObject.FromObject(2));
+		vm.Stack.Push(VMObject.FromObject("ABCD"));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
 
-        var result = vm.Stack.Pop().AsString();
-        Assert.IsTrue(result == "AB*D");
+		var result = vm.Stack.Pop().AsString();
+		Assert.IsTrue(result == "AB*D");
 
-        var toUpper = contract.abi.FindMethod("toUpper");
-        Assert.IsNotNull(toUpper);
+		var toUpper = contract.abi.FindMethod("toUpper");
+		Assert.IsNotNull(toUpper);
 
-        vm = new TestVM(contract, storage, toUpper);
-        vm.Stack.Push(VMObject.FromObject("abcd"));
-        state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, toUpper);
+		vm.Stack.Push(VMObject.FromObject("abcd"));
+		state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
 
-        result = vm.Stack.Pop().AsString();
-        Assert.IsTrue(result == "ABCD");
-    }
+		result = vm.Stack.Pop().AsString();
+		Assert.IsTrue(result == "ABCD");
+	}
 
 
-    [Test]
-    public void StringParameters()
-    {
-	    var sourceCode = @"
+	[Test]
+	public void StringParameters()
+	{
+		var sourceCode = @"
 contract handlerstring {
 	import String;
 
@@ -220,25 +220,25 @@ contract handlerstring {
 }
 ";
 
-	    var parser = new TombLangCompiler();
-	    var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-	    var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-	    TestVM vm;
+		TestVM vm;
 
-	    var test = contract.abi.FindMethod("joinStrings");
-	    Assert.IsNotNull(test);
+		var test = contract.abi.FindMethod("joinStrings");
+		Assert.IsNotNull(test);
 
-	    vm = new TestVM(contract, storage, test);
-	    vm.Stack.Push(VMObject.FromObject("IJKL"));
-	    vm.Stack.Push(VMObject.FromObject("EFGH"));
-	    vm.Stack.Push(VMObject.FromObject(2));
-	    vm.Stack.Push(VMObject.FromObject("ABCD"));
-	    var state = vm.Execute();
-	    Assert.IsTrue(state == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, test);
+		vm.Stack.Push(VMObject.FromObject("IJKL"));
+		vm.Stack.Push(VMObject.FromObject("EFGH"));
+		vm.Stack.Push(VMObject.FromObject(2));
+		vm.Stack.Push(VMObject.FromObject("ABCD"));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
 
-	    var result = vm.Stack.Pop().AsString();
-	    Assert.AreEqual("ABCDEFGHIJKL2", result );
-    }
+		var result = vm.Stack.Pop().AsString();
+		Assert.That(result, Is.EqualTo("ABCDEFGHIJKL2"));
+	}
 }

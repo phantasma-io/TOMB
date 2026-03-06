@@ -11,11 +11,11 @@ namespace TOMBLib.Tests.Contracts;
 
 public class EventTests
 {
-    [Test]
-    public void TestEvent()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void TestEvent()
+	{
+		var sourceCode =
+			@"
 contract test {
 	import Runtime;
 
@@ -30,33 +30,33 @@ contract test {
 }
 ";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First(x => x.Name == "test");
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First(x => x.Name == "test");
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        var payStuff = contract.abi.FindMethod("paySomething");
-        Assert.IsNotNull(payStuff);
+		var payStuff = contract.abi.FindMethod("paySomething");
+		Assert.IsNotNull(payStuff);
 
-        // Test for the 1st case
-        var vm = new TestVM(contract, storage, payStuff);
-        var keys = PhantasmaKeys.Generate();
-        vm.Stack.Push(VMObject.FromObject((BigInteger)10));
-        vm.Stack.Push(VMObject.FromObject(keys.Address));
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		// Test for the 1st case
+		var vm = new TestVM(contract, storage, payStuff);
+		var keys = PhantasmaKeys.Generate();
+		vm.Stack.Push(VMObject.FromObject((BigInteger)10));
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        Assert.IsTrue(vm.Events.Count() == 1);
-    }
+		Assert.IsTrue(vm.Events.Count() == 1);
+	}
 
 
-    [Test]
-    public void TestEventWithDescription()
-    {
-	    var sourceCode =
-		    @"
+	[Test]
+	public void TestEventWithDescription()
+	{
+		var sourceCode =
+			@"
 description payment_event {
 
 	code(from:address, amount:number): string {
@@ -84,24 +84,24 @@ contract test {
 ";
 
 
-	    var parser = new TombLangCompiler();
-	    var contract = parser.Process(sourceCode).First(x => x.Name == "test");
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First(x => x.Name == "test");
 
-	    var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-	    var payStuff = contract.abi.FindMethod("paySomething");
-	    Assert.IsNotNull(payStuff);
+		var payStuff = contract.abi.FindMethod("paySomething");
+		Assert.IsNotNull(payStuff);
 
-	    // Test for the 1st case
-	    var vm = new TestVM(contract, storage, payStuff);
-	    var keys = PhantasmaKeys.Generate();
-	    vm.Stack.Push(VMObject.FromObject((BigInteger)10));
-	    vm.Stack.Push(VMObject.FromObject(keys.Address));
-	    var result = vm.Execute();
-	    Assert.IsTrue(result == ExecutionState.Halt);
+		// Test for the 1st case
+		var vm = new TestVM(contract, storage, payStuff);
+		var keys = PhantasmaKeys.Generate();
+		vm.Stack.Push(VMObject.FromObject((BigInteger)10));
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-	    Assert.IsTrue(vm.Stack.Count == 1);
-        Assert.IsTrue(vm.Events.Count() == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Events.Count() == 1);
 
-    }
+	}
 }

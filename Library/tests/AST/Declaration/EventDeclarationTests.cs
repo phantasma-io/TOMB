@@ -7,20 +7,20 @@ namespace TOMBLib.Tests.AST.Declaration;
 
 public class EventDeclarationTests
 {
-    private Scope _scope;
-    private VarType _returnType;
-    private byte[] _descriptionScript;
-    
-    [SetUp]
-    public void Setup()
-    {
-        TombLangLexer lexer = new TombLangLexer();
-        _scope = null;
-        _returnType = VarType.Find(VarKind.String);
-        _descriptionScript = EventDeclaration.GenerateScriptFromString(_returnType, "\"{address}: {data}\"");
-    }
-    
-    /*[Test]
+	private Scope _scope;
+	private VarType _returnType;
+	private byte[] _descriptionScript;
+
+	[SetUp]
+	public void Setup()
+	{
+		TombLangLexer lexer = new TombLangLexer();
+		_scope = null;
+		_returnType = VarType.Find(VarKind.String);
+		_descriptionScript = EventDeclaration.GenerateScriptFromString(_returnType, "\"{address}: {data}\"");
+	}
+
+	/*[Test]
     public void TestEventDeclarationConstructor()
     {
         var eventDeclaration = new EventDeclaration(_scope, "TestEvent", 1, _returnType, _descriptionScript);

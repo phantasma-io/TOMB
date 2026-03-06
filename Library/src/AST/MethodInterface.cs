@@ -8,251 +8,251 @@ using PhantasmaPhoenix.VM;
 
 namespace Phantasma.Tomb.AST
 {
-    public class MethodParameter: Node
-    {
-        public string Name { get; private set; }
-        public VarType Type { get; internal set; }
+	public class MethodParameter : Node
+	{
+		public string Name { get; private set; }
+		public VarType Type { get; internal set; }
 
-        public Func<CodeGenerator, Scope, Expression, Register> Callback;
+		public Func<CodeGenerator, Scope, Expression, Register> Callback;
 
-        public MethodParameter(string name, VarType type)
-        {
-            Name = name;
-            Type = type;
-        }
+		public MethodParameter(string name, VarType type)
+		{
+			Name = name;
+			Type = type;
+		}
 
-        public MethodParameter(string name, VarKind kind) : this(name, VarType.Find(kind))
-        {
-        }
+		public MethodParameter(string name, VarKind kind) : this(name, VarType.Find(kind))
+		{
+		}
 
-        public override string ToString()
-        {
-            return $"{Name}:{Type}";
-        }
+		public override string ToString()
+		{
+			return $"{Name}:{Type}";
+		}
 
-        public override void Visit(Action<Node> callback)
-        {
-            callback(this);
-        }
+		public override void Visit(Action<Node> callback)
+		{
+			callback(this);
+		}
 
-        public override bool IsNodeUsed(Node node)
-        {
-            return node == this;
-        }
+		public override bool IsNodeUsed(Node node)
+		{
+			return node == this;
+		}
 
-        public void SetParameterCallback(Func<CodeGenerator, Scope, Expression, Register> callback)
-        {
-            this.Callback = callback;
-        }
-    }
+		public void SetParameterCallback(Func<CodeGenerator, Scope, Expression, Register> callback)
+		{
+			this.Callback = callback;
+		}
+	}
 
-    public enum MethodImplementationType
-    {
-        ExtCall,
-        ContractCall,
-        LocalCall,
-        Custom
-    }
+	public enum MethodImplementationType
+	{
+		ExtCall,
+		ContractCall,
+		LocalCall,
+		Custom
+	}
 
-    public class MethodInterface
-    {
-        public string Name;
-        public LibraryDeclaration Library;
-        public MethodKind Kind;
-        public VarType ReturnType;
-        public MethodParameter[] Parameters;
-        public bool IsPublic;
-        public string Alias;
-        public string Contract;
-        public MethodImplementationType Implementation;
-        public Func<CodeGenerator, Scope, MethodCallExpression, Register> PreCallback;
-        public Func<CodeGenerator, Scope, MethodCallExpression, Register, Register> PostCallback;
+	public class MethodInterface
+	{
+		public string Name;
+		public LibraryDeclaration Library;
+		public MethodKind Kind;
+		public VarType ReturnType;
+		public MethodParameter[] Parameters;
+		public bool IsPublic;
+		public string Alias;
+		public string Contract;
+		public MethodImplementationType Implementation;
+		public Func<CodeGenerator, Scope, MethodCallExpression, Register> PreCallback;
+		public Func<CodeGenerator, Scope, MethodCallExpression, Register, Register> PostCallback;
 
-        public int StartAsmLine;
-        public int EndAsmLine;
+		public int StartAsmLine;
+		public int EndAsmLine;
 
-        public bool IsMulti; // if true, method will emit multiple return values in the vm result stack
-        public bool IsBuiltin;
+		public bool IsMulti; // if true, method will emit multiple return values in the vm result stack
+		public bool IsBuiltin;
 
-        public MethodInterface(LibraryDeclaration library, MethodImplementationType implementation, string name, bool isPublic, MethodKind kind, VarType returnType, MethodParameter[] parameters, string alias = null, bool isMulti = false, bool isBuiltin = false) 
-        {
-            this.Name = name;
-            this.Library = library;
-            this.Implementation = implementation;
-            this.Kind = kind;
-            this.IsPublic = isPublic; 
-            this.ReturnType = returnType;
-            this.Parameters = parameters;
-            this.IsMulti = isMulti;
-            this.IsBuiltin = isBuiltin;
+		public MethodInterface(LibraryDeclaration library, MethodImplementationType implementation, string name, bool isPublic, MethodKind kind, VarType returnType, MethodParameter[] parameters, string alias = null, bool isMulti = false, bool isBuiltin = false)
+		{
+			this.Name = name;
+			this.Library = library;
+			this.Implementation = implementation;
+			this.Kind = kind;
+			this.IsPublic = isPublic;
+			this.ReturnType = returnType;
+			this.Parameters = parameters;
+			this.IsMulti = isMulti;
+			this.IsBuiltin = isBuiltin;
 
-            this.PreCallback = null;
-            this.PostCallback = null;
-            
-            this.Contract = this.Library.Name;
+			this.PreCallback = null;
+			this.PostCallback = null;
 
-            if (alias != null)
-            {
-                this.Alias = alias;
-            }
-            else
-            {
-                this.Alias = $"{char.ToUpper(this.Name[0])}{this.Name.Substring(1)}";
-                if (implementation == MethodImplementationType.ExtCall)
-                {
-                    this.Alias = this.Library.Name + '.' + this.Alias;
-                }
-            }            
-        }
+			this.Contract = this.Library.Name;
 
-        public MethodInterface Clone(LibraryDeclaration targetLibrary)
-        {
-            var method = this;
-            var parameters = new List<MethodParameter>();
+			if (alias != null)
+			{
+				this.Alias = alias;
+			}
+			else
+			{
+				this.Alias = $"{char.ToUpper(this.Name[0])}{this.Name.Substring(1)}";
+				if (implementation == MethodImplementationType.ExtCall)
+				{
+					this.Alias = this.Library.Name + '.' + this.Alias;
+				}
+			}
+		}
 
-            foreach (var parameter in method.Parameters)
-            {
-                var entry = new MethodParameter(parameter.Name, parameter.Type);
-                entry.Callback = parameter.Callback;
-                parameters.Add(entry);
-            }
+		public MethodInterface Clone(LibraryDeclaration targetLibrary)
+		{
+			var method = this;
+			var parameters = new List<MethodParameter>();
 
-            var newMethod = new MethodInterface(targetLibrary, method.Implementation, method.Name, method.IsPublic, method.Kind, method.ReturnType, parameters.ToArray(), method.Alias, method.IsMulti, method.IsBuiltin);
-            newMethod.Contract = method.Contract;
-            newMethod.PreCallback = method.PreCallback;
-            newMethod.PostCallback = method.PostCallback;
+			foreach (var parameter in method.Parameters)
+			{
+				var entry = new MethodParameter(parameter.Name, parameter.Type);
+				entry.Callback = parameter.Callback;
+				parameters.Add(entry);
+			}
 
-            return newMethod;
-        }
+			var newMethod = new MethodInterface(targetLibrary, method.Implementation, method.Name, method.IsPublic, method.Kind, method.ReturnType, parameters.ToArray(), method.Alias, method.IsMulti, method.IsBuiltin);
+			newMethod.Contract = method.Contract;
+			newMethod.PreCallback = method.PreCallback;
+			newMethod.PostCallback = method.PostCallback;
 
-        public override string ToString()
-        {
-            return $"method {Name}:{ReturnType}";
-        }
+			return newMethod;
+		}
 
-        public MethodInterface SetContract(string contract)
-        {
-            this.Contract = contract;
-            return this;
-        }
+		public override string ToString()
+		{
+			return $"method {Name}:{ReturnType}";
+		}
 
-        public MethodInterface SetAlias(string alias)
-        {
-            this.Alias = alias;
-            return this;
-        }
+		public MethodInterface SetContract(string contract)
+		{
+			this.Contract = contract;
+			return this;
+		}
 
-        public MethodInterface SetPreCallback(Func<CodeGenerator, Scope, MethodCallExpression, Register> callback)
-        {
-            this.PreCallback = callback;
-            return this;
-        }
+		public MethodInterface SetAlias(string alias)
+		{
+			this.Alias = alias;
+			return this;
+		}
 
-        public MethodInterface SetPostCallback(Func<CodeGenerator, Scope, MethodCallExpression, Register, Register> callback)
-        {
-            this.PostCallback = callback;
-            return this;
-        }
+		public MethodInterface SetPreCallback(Func<CodeGenerator, Scope, MethodCallExpression, Register> callback)
+		{
+			this.PreCallback = callback;
+			return this;
+		}
 
-        public MethodInterface SetParameterCallback(string name, Func<CodeGenerator, Scope, Expression, Register> callback)
-        {
-            foreach (var parameter in Parameters)
-            {
-                if (parameter.Name == name)
-                {
-                    parameter.SetParameterCallback(callback);
-                    return this;
-                }
-            }
+		public MethodInterface SetPostCallback(Func<CodeGenerator, Scope, MethodCallExpression, Register, Register> callback)
+		{
+			this.PostCallback = callback;
+			return this;
+		}
 
-            throw new Exception($"method {this.Library.Name}.{this.Name} contains no parameter called {name}");
-        }
+		public MethodInterface SetParameterCallback(string name, Func<CodeGenerator, Scope, Expression, Register> callback)
+		{
+			foreach (var parameter in Parameters)
+			{
+				if (parameter.Name == name)
+				{
+					parameter.SetParameterCallback(callback);
+					return this;
+				}
+			}
 
-        public static VMType ConvertType(VarType type)
-        {
-            return ConvertType(type.Kind);
-        }
+			throw new Exception($"method {this.Library.Name}.{this.Name} contains no parameter called {name}");
+		}
 
-        public static VMType ConvertType(VarKind kind)
-        {
-            switch (kind)
-            {
-                case VarKind.Address:
-                    return VMType.Object;
+		public static VMType ConvertType(VarType type)
+		{
+			return ConvertType(type.Kind);
+		}
 
-                case VarKind.Bytes:
-                case VarKind.Hash:
-                    return VMType.Bytes;
+		public static VMType ConvertType(VarKind kind)
+		{
+			switch (kind)
+			{
+				case VarKind.Address:
+					return VMType.Object;
 
-                case VarKind.Bool:
-                    return VMType.Bool;
+				case VarKind.Bytes:
+				case VarKind.Hash:
+					return VMType.Bytes;
 
-                case VarKind.Enum:
-                case VarKind.Type:
-                    return VMType.Enum;
+				case VarKind.Bool:
+					return VMType.Bool;
 
-                case VarKind.Method:
-                case VarKind.Number:
-                case VarKind.Decimal:
-                case VarKind.Task:
-                    return VMType.Number;
+				case VarKind.Enum:
+				case VarKind.Type:
+					return VMType.Enum;
 
-                case VarKind.String:
-                    return VMType.String;
+				case VarKind.Method:
+				case VarKind.Number:
+				case VarKind.Decimal:
+				case VarKind.Task:
+					return VMType.Number;
 
-                case VarKind.Timestamp:
-                    return VMType.Timestamp;
+				case VarKind.String:
+					return VMType.String;
 
-                case VarKind.None:
-                    return VMType.None;
+				case VarKind.Timestamp:
+					return VMType.Timestamp;
 
-                case VarKind.Struct:
-                case VarKind.Array:
-                    return VMType.Struct;
+				case VarKind.None:
+					return VMType.None;
 
-                case VarKind.Module:
-                    return VMType.Bytes;
+				case VarKind.Struct:
+				case VarKind.Array:
+					return VMType.Struct;
 
-                default:
-                    throw new System.Exception("Not a valid ABI return type: " + kind);
-            }
-        }
+				case VarKind.Module:
+					return VMType.Bytes;
 
-        public static VarKind ConvertType(VMType type)
-        {
-            switch (type)
-            {
-                case VMType.Object:
-                    return VarKind.Address; // WARNING this is not valid in some situations...
+				default:
+					throw new System.Exception("Not a valid ABI return type: " + kind);
+			}
+		}
 
-                case VMType.Bytes:
-                    return VarKind.Bytes;
+		public static VarKind ConvertType(VMType type)
+		{
+			switch (type)
+			{
+				case VMType.Object:
+					return VarKind.Address; // WARNING this is not valid in some situations...
 
-                case VMType.Bool:
-                    return VarKind.Bool;
+				case VMType.Bytes:
+					return VarKind.Bytes;
 
-                case VMType.Enum:
-                    return VarKind.Enum;
+				case VMType.Bool:
+					return VarKind.Bool;
 
-                case VMType.Number:
-                    return VarKind.Number;
+				case VMType.Enum:
+					return VarKind.Enum;
 
-                case VMType.String:
-                    return VarKind.String;
+				case VMType.Number:
+					return VarKind.Number;
 
-                case VMType.Timestamp:
-                    return VarKind.Timestamp;
+				case VMType.String:
+					return VarKind.String;
 
-                case VMType.None:
-                    return VarKind.None;
+				case VMType.Timestamp:
+					return VarKind.Timestamp;
 
-                case VMType.Struct:
-                    return VarKind.Struct;
+				case VMType.None:
+					return VarKind.None;
 
-                default:
-                    throw new System.Exception("Not a valid vm type: " + type);
-            }
-        }
+				case VMType.Struct:
+					return VarKind.Struct;
 
-    }
+				default:
+					throw new System.Exception("Not a valid vm type: " + type);
+			}
+		}
+
+	}
 }

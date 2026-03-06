@@ -11,13 +11,13 @@ using PhantasmaPhoenix.Protocol;
 
 namespace TOMBLib.Tests
 {
-    public class GeneralTests
-    {
+	public class GeneralTests
+	{
 
-        [Test]
-        public void DeprecatedAssigment()
-        {
-            var sourceCode = @"
+		[Test]
+		public void DeprecatedAssigment()
+		{
+			var sourceCode = @"
 contract test {
     global _addressOwner:address;
 
@@ -28,58 +28,58 @@ contract test {
 }
 ";
 
-            var parser = new TombLangCompiler();
+			var parser = new TombLangCompiler();
 
-            var exception = Assert.Catch<CompilerException>(() =>
-            {
-                var contract = parser.Process(sourceCode).First();
-            });
+			var exception = Assert.Catch<CompilerException>(() =>
+			{
+				var contract = parser.Process(sourceCode).First();
+			});
 
-            Assert.IsTrue(exception.Message.Contains("deprecated", StringComparison.OrdinalIgnoreCase));
-        }
-        
-        [Test]
-        public void AvailableSymbols()
-        {
-            var tokenSymbol = "TOK";
+			Assert.IsTrue(exception.Message.Contains("deprecated", StringComparison.OrdinalIgnoreCase));
+		}
 
-            string[] sourceCode = new string[]
-            {
-                "token " + tokenSymbol + " {",
-                "   property name: string = \"" + tokenSymbol + "\";",
-                "import Token;",
-                "public getSymbols() : array<string> {",
-                "   local symbols:array<string>;",
-                "   symbols = Token.availableSymbols();",
-                "return symbols;}",
-                "}"
-            };
+		[Test]
+		public void AvailableSymbols()
+		{
+			var tokenSymbol = "TOK";
 
-            var parser = new TombLangCompiler();
-            var contract = parser.Process(sourceCode).First();
+			string[] sourceCode = new string[]
+			{
+				"token " + tokenSymbol + " {",
+				"   property name: string = \"" + tokenSymbol + "\";",
+				"import Token;",
+				"public getSymbols() : array<string> {",
+				"   local symbols:array<string>;",
+				"   symbols = Token.availableSymbols();",
+				"return symbols;}",
+				"}"
+			};
 
-            var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+			var parser = new TombLangCompiler();
+			var contract = parser.Process(sourceCode).First();
 
-            TestVM vm;
+			var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-            var getSymbols = contract.abi.FindMethod("getSymbols");
-            Assert.IsNotNull(getSymbols);
+			TestVM vm;
 
-            vm = new TestVM(contract, storage, getSymbols);
-            var result = vm.Execute();
-            Assert.IsTrue(result == ExecutionState.Halt);
+			var getSymbols = contract.abi.FindMethod("getSymbols");
+			Assert.IsNotNull(getSymbols);
 
-            Assert.IsTrue(vm.Stack.Count == 1);
+			vm = new TestVM(contract, storage, getSymbols);
+			var result = vm.Execute();
+			Assert.IsTrue(result == ExecutionState.Halt);
 
-            var obj = vm.Stack.Pop();
-            var newVal = obj.ToArray<string>();
+			Assert.IsTrue(vm.Stack.Count == 1);
 
-            Assert.IsTrue(newVal.Length == 2);
-            Assert.IsTrue(newVal[0] == "LOL");
-            Assert.IsTrue(newVal[1] == tokenSymbol);
-        }
-        
-        /*        [Test]
+			var obj = vm.Stack.Pop();
+			var newVal = obj.ToArray<string>();
+
+			Assert.IsTrue(newVal.Length == 2);
+			Assert.IsTrue(newVal[0] == "LOL");
+			Assert.IsTrue(newVal[1] == tokenSymbol);
+		}
+
+		/*        [Test]
                 public void AES()
                 {
                     var keys = PhantasmaKeys.Generate();
@@ -234,62 +234,62 @@ contract test {
                     simulator.EndBlock();
                 }*/
 
-        
 
-        
-        
 
-        // add simplified version of that test
-        //[Test]
-        //public void TestGHOST()
-        //{
-        //    var keys = PhantasmaKeys.Generate();
-        //    var keys2 = PhantasmaKeys.Generate();
 
-        //    var nexus = new Nexus("simnet", null, null);
-        //    nexus.SetOracleReader(new OracleSimulator(nexus));
-        //    var simulator = new NexusSimulator(nexus, keys, 1234);
-        //    var mempool = new Mempool(simulator.Nexus, 2, 1, System.Text.Encoding.UTF8.GetBytes("TEST"), 0, new DummyLogger());
-        //    mempool?.SetKeys(keys);
 
-        //    var api = new NexusAPI(simulator.Nexus);
-        //    api.Mempool = mempool;
-        //    mempool.Start();
-        //    var sourceCode = System.IO.File.ReadAllLines("/home/merl/source/phantasma/GhostMarketContractPhantasma/GHOST.tomb");
-        //    var parser = new TombLangCompiler();
-        //    var contract = parser.Process(sourceCode).First();
-        //    //Console.WriteLine("contract asm: " + contract.asm);
-        //    //System.IO.File.WriteAllText(@"GHOST_series.asm", contract.SubModules.First().asm);
 
-        //    simulator.BeginBlock();
-        //    simulator.GenerateCustomTransaction(keys, ProofOfWork.Minimal,
-        //            () => ScriptUtils.BeginScript().AllowGas(keys.Address, Address.Null, 1, 9999)
-        //            .CallInterop("Nexus.CreateToken", keys.Address, "GHOST", "GHOST", new BigInteger(10000), new BigInteger(0),
-        //                TokenFlags.Transferable|TokenFlags.Burnable|TokenFlags.Finite, contract.script, contract.abi.ToByteArray())
-        //            .SpendGas(keys.Address)
-        //            .EndScript());
-        //    simulator.EndBlock();
+		// add simplified version of that test
+		//[Test]
+		//public void TestGHOST()
+		//{
+		//    var keys = PhantasmaKeys.Generate();
+		//    var keys2 = PhantasmaKeys.Generate();
 
-        //    var token = (TokenResult)api.GetToken("GHOST");
-        //    Console.WriteLine("id: " + token.ToString());
-        //    Console.WriteLine("address: " + token.address);
+		//    var nexus = new Nexus("simnet", null, null);
+		//    nexus.SetOracleReader(new OracleSimulator(nexus));
+		//    var simulator = new NexusSimulator(nexus, keys, 1234);
+		//    var mempool = new Mempool(simulator.Nexus, 2, 1, System.Text.Encoding.UTF8.GetBytes("TEST"), 0, new DummyLogger());
+		//    mempool?.SetKeys(keys);
 
-        //    simulator.BeginBlock();
-        //    simulator.GenerateCustomTransaction(keys, ProofOfWork.Minimal,
-        //            () => ScriptUtils.BeginScript().AllowGas(keys.Address, Address.Parse(token.address), 1, 9999)
-        //            .CallContract("GHOST", "mintToken", 0, 1, 1,
-        //                keys.Address, 0, "GHOST", 1, "testnft", "desc1234567890", 1,
-        //                "0", "0", "", "", "", "", "", "", "", 0, "", new Timestamp(1), "", 0)
-        //            .SpendGas(keys.Address)
-        //            .EndScript());
-        //    simulator.EndBlock();
+		//    var api = new NexusAPI(simulator.Nexus);
+		//    api.Mempool = mempool;
+		//    mempool.Start();
+		//    var sourceCode = System.IO.File.ReadAllLines("/home/merl/source/phantasma/GhostMarketContractPhantasma/GHOST.tomb");
+		//    var parser = new TombLangCompiler();
+		//    var contract = parser.Process(sourceCode).First();
+		//    //Console.WriteLine("contract asm: " + contract.asm);
+		//    //System.IO.File.WriteAllText(@"GHOST_series.asm", contract.SubModules.First().asm);
 
-        //    Console.WriteLine("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        //    var nft = (TokenDataResult)api.GetNFT("GHOST", "80807712912753409015029052615541912663228133032695758696669246580757047529373", true);
-        //    Console.WriteLine("nft series: " + nft.series);
-        //}
+		//    simulator.BeginBlock();
+		//    simulator.GenerateCustomTransaction(keys, ProofOfWork.Minimal,
+		//            () => ScriptUtils.BeginScript().AllowGas(keys.Address, Address.Null, 1, 9999)
+		//            .CallInterop("Nexus.CreateToken", keys.Address, "GHOST", "GHOST", new BigInteger(10000), new BigInteger(0),
+		//                TokenFlags.Transferable|TokenFlags.Burnable|TokenFlags.Finite, contract.script, contract.abi.ToByteArray())
+		//            .SpendGas(keys.Address)
+		//            .EndScript());
+		//    simulator.EndBlock();
 
-        /*[Test]
+		//    var token = (TokenResult)api.GetToken("GHOST");
+		//    Console.WriteLine("id: " + token.ToString());
+		//    Console.WriteLine("address: " + token.address);
+
+		//    simulator.BeginBlock();
+		//    simulator.GenerateCustomTransaction(keys, ProofOfWork.Minimal,
+		//            () => ScriptUtils.BeginScript().AllowGas(keys.Address, Address.Parse(token.address), 1, 9999)
+		//            .CallContract("GHOST", "mintToken", 0, 1, 1,
+		//                keys.Address, 0, "GHOST", 1, "testnft", "desc1234567890", 1,
+		//                "0", "0", "", "", "", "", "", "", "", 0, "", new Timestamp(1), "", 0)
+		//            .SpendGas(keys.Address)
+		//            .EndScript());
+		//    simulator.EndBlock();
+
+		//    Console.WriteLine("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		//    var nft = (TokenDataResult)api.GetNFT("GHOST", "80807712912753409015029052615541912663228133032695758696669246580757047529373", true);
+		//    Console.WriteLine("nft series: " + nft.series);
+		//}
+
+		/*[Test]
         public void TestCROWN()
         {
             var keys = PhantasmaKeys.Generate();
@@ -558,6 +558,6 @@ contract test {
             var exists = callResult.AsBool();
             Assert.IsFalse(exists, "It shouldn't exist...");
         }*/
-        
-    }
+
+	}
 }

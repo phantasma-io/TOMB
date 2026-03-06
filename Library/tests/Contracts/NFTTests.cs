@@ -12,10 +12,10 @@ namespace TOMBLib.Tests.Contracts;
 public class NFTTests
 {
 
-    [Test]
-    public void GetInfusions()
-    {
-        var sourceCode = @"
+	[Test]
+	public void GetInfusions()
+	{
+		var sourceCode = @"
 contract test{
 
 import NFT;
@@ -30,44 +30,44 @@ public testMethod() : Infusion {
     }
 }";
 
-        /*
+		/*
 public testMethod2():number {
     local nfts: array<Infusion> = NFT.getInfusions(""SOUL"", 123);
     return Array.length(nfts);
 }
          */
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var asm = contract.asm;
-        Debug.WriteLine(asm);
+		var asm = contract.asm;
+		Debug.WriteLine(asm);
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        // call testMethod
-        var method = contract.abi.FindMethod("testMethod");
-        Assert.IsNotNull(method);
+		// call testMethod
+		var method = contract.abi.FindMethod("testMethod");
+		Assert.IsNotNull(method);
 
-        vm = new TestVM(contract, storage, method);
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, method);
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        var obj = vm.Stack.Pop();
-        var returnedValue = obj.AsStruct<TokenInfusion>();
+		var obj = vm.Stack.Pop();
+		var returnedValue = obj.AsStruct<TokenInfusion>();
 
-        Assert.IsTrue(returnedValue.Symbol == "SOUL");
-        Assert.IsTrue(returnedValue.Value == 1234);
-    }
+		Assert.IsTrue(returnedValue.Symbol == "SOUL");
+		Assert.IsTrue(returnedValue.Value == 1234);
+	}
 
-    [Test]
-    public void GetOwnerships()
-    {
-        var sourceCode = @"
+	[Test]
+	public void GetOwnerships()
+	{
+		var sourceCode = @"
 contract test{
 
 import NFT;
@@ -79,36 +79,36 @@ public testMethod(from:address) : array<number> {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var asm = contract.asm;
-        Debug.WriteLine(asm);
+		var asm = contract.asm;
+		Debug.WriteLine(asm);
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        // call testMethod
-        var method = contract.abi.FindMethod("testMethod");
-        Assert.IsNotNull(method);
+		// call testMethod
+		var method = contract.abi.FindMethod("testMethod");
+		Assert.IsNotNull(method);
 
-        vm = new TestVM(contract, storage, method);
-        vm.Stack.Push(VMObject.FromObject(keys.Address));
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, method);
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        var obj = vm.Stack.Pop();
-        var array = obj.ToArray<BigInteger>();
+		var obj = vm.Stack.Pop();
+		var array = obj.ToArray<BigInteger>();
 
-        Assert.IsTrue(array.Length == 3);
-    }
+		Assert.IsTrue(array.Length == 3);
+	}
 
-    /*
+	/*
                [Test]
                public void NFTs()
                {

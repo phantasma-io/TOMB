@@ -9,10 +9,10 @@ namespace TOMBLib.Tests.Contracts;
 
 public class ABITests
 {
-    [Test]
-    public void ABITest()
-    {
-        var sourceCode = @"
+	[Test]
+	public void ABITest()
+	{
+		var sourceCode = @"
 token MTEST {
 	public getName(): string {
 		return ""Unit test"";
@@ -28,23 +28,23 @@ contract mytests {
 }
 ";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First(x => x.Name == "mytests");
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First(x => x.Name == "mytests");
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var testMethod = contract.abi.FindMethod("test");
-        Assert.IsNotNull(testMethod);
+		var testMethod = contract.abi.FindMethod("test");
+		Assert.IsNotNull(testMethod);
 
-        vm = new TestVM(contract, storage, testMethod);
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, testMethod);
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        var obj = vm.Stack.Pop();
-        Assert.IsTrue(obj.AsNumber() == 0);
-    }
+		var obj = vm.Stack.Pop();
+		Assert.IsTrue(obj.AsNumber() == 0);
+	}
 }

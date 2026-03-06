@@ -5,9 +5,9 @@ namespace TOMBLib.Tests.AST.Declaration;
 
 public class MethodDeclarationTests
 {
-    [SetUp]
-    public void Setup()
-    {
-        TombLangLexer lexer = new TombLangLexer();
-    }
+	[SetUp]
+	public void Setup()
+	{
+		TombLangLexer lexer = new TombLangLexer();
+	}
 }

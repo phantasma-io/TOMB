@@ -9,19 +9,19 @@ using static System.Runtime.CompilerServices.RuntimeHelpers;
 namespace Phantasma.Tomb.CodeGen
 {
 	public struct BuiltinArg
-    {
+	{
 		public readonly string Name;
 		public readonly VarType Type;
 
-        public BuiltinArg(string name, VarType type)
-        {
-            Name = name;
-            Type = type;
-        }
-    }
+		public BuiltinArg(string name, VarType type)
+		{
+			Name = name;
+			Type = type;
+		}
+	}
 
 	public readonly struct BuiltinInfo
-    {
+	{
 		public readonly string Alias;
 		public readonly string LibraryName;
 		public readonly string MethodName;
@@ -31,55 +31,55 @@ namespace Phantasma.Tomb.CodeGen
 
 		public readonly string[] InternalVariables;
 
-        public BuiltinInfo(string alias, string libraryName, string methodName, VarKind returnType, IEnumerable<BuiltinArg> args, string code, IEnumerable<string> internalVariables)
-        {
+		public BuiltinInfo(string alias, string libraryName, string methodName, VarKind returnType, IEnumerable<BuiltinArg> args, string code, IEnumerable<string> internalVariables)
+		{
 			Alias = alias;
-            LibraryName = libraryName;
-            MethodName = methodName;
+			LibraryName = libraryName;
+			MethodName = methodName;
 			ReturnType = returnType;
-            Args = args.ToArray();
+			Args = args.ToArray();
 			Code = code;
 			InternalVariables = internalVariables.ToArray();
-        }
+		}
 
-        public override string ToString()
-        {
-            return $"{Alias}:{ReturnType} ({LibraryName})";
-        }
-    }
+		public override string ToString()
+		{
+			return $"{Alias}:{ReturnType} ({LibraryName})";
+		}
+	}
 
 	public static class Builtins
-    {
+	{
 		private static Dictionary<string, BuiltinInfo> _builtins = null;
 
 		public static void FillLibrary(LibraryDeclaration libDecl)
-        {
+		{
 			if (_builtins == null)
-            {
+			{
 				Initialize();
-            }
+			}
 
 			foreach (var entry in _builtins.Values)
-            {
+			{
 				if (entry.LibraryName.Equals(libDecl.Name, StringComparison.OrdinalIgnoreCase))
-                {
+				{
 					var args = entry.Args.Select(x => new MethodParameter(x.Name, x.Type)).ToArray();
-					libDecl.AddMethod(entry.MethodName, MethodImplementationType.LocalCall, entry.ReturnType, args, null, isBuiltin:true).SetAlias(entry.Alias);
+					libDecl.AddMethod(entry.MethodName, MethodImplementationType.LocalCall, entry.ReturnType, args, null, isBuiltin: true).SetAlias(entry.Alias);
 				}
 			}
-        }
+		}
 
 		private static readonly string TAG = "// #BUILTIN";
 
 		private static string DecodeAlias(string line)
 		{
-            var tmp = line.Split('$');
-            line = tmp[1];
+			var tmp = line.Split('$');
+			line = tmp[1];
 
-            tmp = line.Split("//");
+			tmp = line.Split("//");
 			line = tmp[0];
 
-            return line.Trim();
+			return line.Trim();
 		}
 
 		private static void Initialize()
@@ -92,10 +92,10 @@ namespace Phantasma.Tomb.CodeGen
 
 			int i = 0;
 			while (i < lines.Length)
-            {
-                if (lines[i].StartsWith(TAG))
-                {
-                    i++;
+			{
+				if (lines[i].StartsWith(TAG))
+				{
+					i++;
 					var libName = lines[i].Substring(11).Trim();
 					i++;
 					var methodName = lines[i].Substring(10).Trim();
@@ -136,18 +136,18 @@ namespace Phantasma.Tomb.CodeGen
 
 						var curLine = lines[i];
 
-                        if (curLine.StartsWith(TAG))
+						if (curLine.StartsWith(TAG))
 						{
 							if (prevIndex >= 0)
 							{
-                                code.Length = prevIndex;
-                            }
+								code.Length = prevIndex;
+							}
 
-                            i--;
+							i--;
 							break;
 						}
 						else
-		                if (builtinAlias.Count > 0 && curLine.Contains("$"))
+						if (builtinAlias.Count > 0 && curLine.Contains("$"))
 						{
 							foreach (var aliasKey in builtinAlias.Keys)
 							{
@@ -159,40 +159,40 @@ namespace Phantasma.Tomb.CodeGen
 								var varName = "$" + aliasKey;
 								if (curLine.Contains(varName))
 								{
-                                    var aliasLine = builtinAlias[aliasKey];
+									var aliasLine = builtinAlias[aliasKey];
 									usedAlias.Add(aliasKey);
 									break;
-                                }
-                            }
-                        }
+								}
+							}
+						}
 
-                        prevIndex = code.Length;
+						prevIndex = code.Length;
 						code.AppendLine(curLine);
 						i++;
 					} while (true);
 
 					if (Compiler.DebugMode)
 					{
-                        Console.WriteLine($"Detected builtin: {libName}.{methodName}");
-                    }
+						Console.WriteLine($"Detected builtin: {libName}.{methodName}");
+					}
 
-                    var alias = ("tomb_" + libName + "_" + methodName).ToLowerInvariant();
+					var alias = ("tomb_" + libName + "_" + methodName).ToLowerInvariant();
 
 					var builtinCode = code.ToString();
 
-                    var builtin = new BuiltinInfo(alias, libName, methodName, returnType, args, builtinCode, usedAlias);
-					_builtins[alias] = builtin;				
+					var builtin = new BuiltinInfo(alias, libName, methodName, returnType, args, builtinCode, usedAlias);
+					_builtins[alias] = builtin;
 				}
 				else
-                if (_builtins.Count == 0 && lines[i].StartsWith("ALIAS "))
-                {
-                    var curLine = lines[i];
-                    var aliasKey = DecodeAlias(curLine);
-                    builtinAlias[aliasKey] = curLine;
-                }
+				if (_builtins.Count == 0 && lines[i].StartsWith("ALIAS "))
+				{
+					var curLine = lines[i];
+					var aliasKey = DecodeAlias(curLine);
+					builtinAlias[aliasKey] = curLine;
+				}
 
-                i++;
-            }
+				i++;
+			}
 		}
 
 		// NOTE - The ASM here is obtained by compiling builtins.tomb
@@ -200,13 +200,13 @@ namespace Phantasma.Tomb.CodeGen
 		public static BuiltinInfo GetMethod(string methodName)
 		{
 			if (_builtins != null)
-            {
+			{
 				if (_builtins.ContainsKey(methodName))
-                {
+				{
 					return _builtins[methodName];
-                }
-            }
-	
+				}
+			}
+
 			throw new CompilerException("Unknown builtin method name: " + methodName);
 		}
 

@@ -11,11 +11,11 @@ namespace TOMBLib.Tests.Contracts;
 
 public class ForTests
 {
-    [Test]
-    public void ForLoop()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void ForLoop()
+	{
+		var sourceCode =
+			@"
 contract test {
     public countStuff():number {
         local x:number = 0;
@@ -27,28 +27,28 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        var countStuff = contract.abi.FindMethod("countStuff");
-        Assert.IsNotNull(countStuff);
+		var countStuff = contract.abi.FindMethod("countStuff");
+		Assert.IsNotNull(countStuff);
 
-        var vm = new TestVM(contract, storage, countStuff);
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		var vm = new TestVM(contract, storage, countStuff);
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
-        var val = vm.Stack.Pop().AsNumber();
-        Assert.IsTrue(val == 18);
-    }
+		Assert.IsTrue(vm.Stack.Count == 1);
+		var val = vm.Stack.Pop().AsNumber();
+		Assert.IsTrue(val == 18);
+	}
 
-    [Test]
-    public void ForLoopOutsideDefinition()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void ForLoopOutsideDefinition()
+	{
+		var sourceCode =
+			@"
 contract test {
     public countStuff():number {
         local x:number = 0;
@@ -60,28 +60,28 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        var countStuff = contract.abi.FindMethod("countStuff");
-        Assert.IsNotNull(countStuff);
+		var countStuff = contract.abi.FindMethod("countStuff");
+		Assert.IsNotNull(countStuff);
 
-        var vm = new TestVM(contract, storage, countStuff);
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		var vm = new TestVM(contract, storage, countStuff);
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
-        var val = vm.Stack.Pop().AsNumber();
-        Assert.IsTrue(val == 10);
-    }
+		Assert.IsTrue(vm.Stack.Count == 1);
+		var val = vm.Stack.Pop().AsNumber();
+		Assert.IsTrue(val == 10);
+	}
 
-    [Test]
-    public void ForLoopDefinitionAssignOutsideVariable()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void ForLoopDefinitionAssignOutsideVariable()
+	{
+		var sourceCode =
+			@"
 contract test {
     public countStuff():number {
         local x:number = 0;
@@ -94,14 +94,14 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
+		var parser = new TombLangCompiler();
 
-        Assert.Catch<CompilerException>(() =>
-        {
-            var contract = parser.Process(sourceCode).First();
-        });
+		Assert.Catch<CompilerException>(() =>
+		{
+			var contract = parser.Process(sourceCode).First();
+		});
 
-        /*
+		/*
         var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
         var countStuff = contract.abi.FindMethod("countStuff");
@@ -110,13 +110,13 @@ contract test {
         var vm = new TestVM(contract, storage, countStuff);
         var result = vm.Execute();
         Assert.IsTrue(result == ExecutionState.Fault);*/
-    }
+	}
 
-    [Test]
-    public void ForLoopInsideVariables()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void ForLoopInsideVariables()
+	{
+		var sourceCode =
+			@"
 contract test {
     public countStuff():number {
         local x:number = 0;
@@ -129,10 +129,10 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        Assert.Catch<CompilerException>(() =>
-        {
-            var contract = parser.Process(sourceCode).First();
-        });
-    }
+		var parser = new TombLangCompiler();
+		Assert.Catch<CompilerException>(() =>
+		{
+			var contract = parser.Process(sourceCode).First();
+		});
+	}
 }

@@ -2,7 +2,7 @@ namespace TOMBLib.Tests.Contracts;
 
 public class TimestampTests
 {
-    /*[Test]
+	/*[Test]
     public void TestContractTimestamp()
     {
         var keys = PhantasmaKeys.Generate();

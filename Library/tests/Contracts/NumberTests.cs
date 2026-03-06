@@ -12,11 +12,11 @@ namespace TOMBLib.Tests.Contracts;
 
 public class NumberTests
 {
-    [Test]
-    public void TestCounter()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void TestCounter()
+	{
+		var sourceCode =
+			@"
 contract test {
     global counter: number;
 
@@ -33,42 +33,42 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
-        Assert.IsNotNull(constructor);
+		var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
+		Assert.IsNotNull(constructor);
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        // call constructor
-        vm = new TestVM(contract, storage, constructor);
-        vm.Stack.Push(VMObject.FromObject(keys.Address));
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		// call constructor
+		vm = new TestVM(contract, storage, constructor);
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
+		Assert.IsTrue(storage.Count == 1);
 
-        // call increment
-        var increment = contract.abi.FindMethod("increment");
-        Assert.IsNotNull(increment);
+		// call increment
+		var increment = contract.abi.FindMethod("increment");
+		Assert.IsNotNull(increment);
 
-        vm = new TestVM(contract, storage, increment);
-        result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, increment);
+		result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
-    }
+		Assert.IsTrue(storage.Count == 1);
+	}
 
-    [Test]
-    public void MinMax()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void MinMax()
+	{
+		var sourceCode =
+			@"
 contract test{
     import Math;
     public calculate(a:number, b:number):number {
@@ -76,32 +76,32 @@ contract test{
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        // call increment
-        var calculate = contract.abi.FindMethod("calculate");
-        Assert.IsNotNull(calculate);
+		// call increment
+		var calculate = contract.abi.FindMethod("calculate");
+		Assert.IsNotNull(calculate);
 
-        vm = new TestVM(contract, storage, calculate);
-        vm.Stack.Push(VMObject.FromObject(5));
-        vm.Stack.Push(VMObject.FromObject(2));
-        var state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, calculate);
+		vm.Stack.Push(VMObject.FromObject(5));
+		vm.Stack.Push(VMObject.FromObject(2));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
 
-        var result = vm.Stack.Pop().AsNumber();
-        Assert.IsTrue(result == 2);
-    }
+		var result = vm.Stack.Pop().AsNumber();
+		Assert.IsTrue(result == 2);
+	}
 
-    [Test]
-    public void MathPow()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void MathPow()
+	{
+		var sourceCode =
+			@"
 contract test{
     import Math;
     public power(a:number, b:number):number {
@@ -109,32 +109,32 @@ contract test{
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        // call increment
-        var calculate = contract.abi.FindMethod("power");
-        Assert.IsNotNull(calculate);
+		// call increment
+		var calculate = contract.abi.FindMethod("power");
+		Assert.IsNotNull(calculate);
 
-        vm = new TestVM(contract, storage, calculate);
-        vm.Stack.Push(VMObject.FromObject(5));
-        vm.Stack.Push(VMObject.FromObject(2));
-        var state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, calculate);
+		vm.Stack.Push(VMObject.FromObject(5));
+		vm.Stack.Push(VMObject.FromObject(2));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
 
-        var result = vm.Stack.Pop().AsNumber();
-        Assert.IsTrue(result == 32, $"{result} == 32");
-    }
+		var result = vm.Stack.Pop().AsNumber();
+		Assert.IsTrue(result == 32, $"{result} == 32");
+	}
 
-    [Test]
-    public void MathPowNumberNegative()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void MathPowNumberNegative()
+	{
+		var sourceCode =
+			@"
 contract test{
     import Math;
     public power(a:number, b:number):number {
@@ -142,32 +142,32 @@ contract test{
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        // call increment
-        var calculate = contract.abi.FindMethod("power");
-        Assert.IsNotNull(calculate);
+		// call increment
+		var calculate = contract.abi.FindMethod("power");
+		Assert.IsNotNull(calculate);
 
-        vm = new TestVM(contract, storage, calculate);
-        vm.Stack.Push(VMObject.FromObject(5));
-        vm.Stack.Push(VMObject.FromObject(-2));
-        var state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, calculate);
+		vm.Stack.Push(VMObject.FromObject(5));
+		vm.Stack.Push(VMObject.FromObject(-2));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
 
-        var result = vm.Stack.Pop().AsNumber();
-        Assert.IsTrue(result == -32, $"{result} == 32");
-    }
+		var result = vm.Stack.Pop().AsNumber();
+		Assert.IsTrue(result == -32, $"{result} == 32");
+	}
 
-    [Test]
-    public void MathPowNegative()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void MathPowNegative()
+	{
+		var sourceCode =
+			@"
 contract test{
     import Math;
     public power(a:number, b:number):number {
@@ -175,101 +175,101 @@ contract test{
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        // call increment
-        var calculate = contract.abi.FindMethod("power");
-        Assert.IsNotNull(calculate);
+		// call increment
+		var calculate = contract.abi.FindMethod("power");
+		Assert.IsNotNull(calculate);
 
-        vm = new TestVM(contract, storage, calculate);
-        vm.Stack.Push(VMObject.FromObject(-5));
-        vm.Stack.Push(VMObject.FromObject(-2));
-        try
-        {
-            var state = vm.Execute();
-            Assert.IsTrue(state == ExecutionState.Halt);
-            var result = vm.Stack.Pop().AsNumber();
-            Assert.IsTrue(result == 32, $"{result} == 32");
-        }
-        catch(Exception e)
-        {
-            Assert.IsTrue(e.Message.Contains("exponent", StringComparison.OrdinalIgnoreCase));
-        }
-    }
+		vm = new TestVM(contract, storage, calculate);
+		vm.Stack.Push(VMObject.FromObject(-5));
+		vm.Stack.Push(VMObject.FromObject(-2));
+		try
+		{
+			var state = vm.Execute();
+			Assert.IsTrue(state == ExecutionState.Halt);
+			var result = vm.Stack.Pop().AsNumber();
+			Assert.IsTrue(result == 32, $"{result} == 32");
+		}
+		catch (Exception e)
+		{
+			Assert.IsTrue(e.Message.Contains("exponent", StringComparison.OrdinalIgnoreCase));
+		}
+	}
 
-    [Test]
-    public void UpdateNumberMethod()
-    {
-        string[] sourceCode = new string[]
-        {
-            "token GHOST {",
-            "	global _infuseMultiplier:number;",
-            "	property name:string = \"test\";",
-            "	property infuseMultiplier:number = _infuseMultiplier;",
-            "	constructor (owner:address) { _infuseMultiplier = 1;	}",
-            "	public updateInfuseMultiplier(infuseMultiplier:number) 	{	_infuseMultiplier = infuseMultiplier;	}",
-            "}"
-        };
+	[Test]
+	public void UpdateNumberMethod()
+	{
+		string[] sourceCode = new string[]
+		{
+			"token GHOST {",
+			"	global _infuseMultiplier:number;",
+			"	property name:string = \"test\";",
+			"	property infuseMultiplier:number = _infuseMultiplier;",
+			"	constructor (owner:address) { _infuseMultiplier = 1;	}",
+			"	public updateInfuseMultiplier(infuseMultiplier:number) 	{	_infuseMultiplier = infuseMultiplier;	}",
+			"}"
+		};
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
-        Assert.IsNotNull(constructor);
+		var constructor = contract.abi.FindMethod(SmartContract.ConstructorName);
+		Assert.IsNotNull(constructor);
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        vm = new TestVM(contract, storage, constructor);
-        vm.Stack.Push(VMObject.FromObject(keys.Address));
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, constructor);
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
+		Assert.IsTrue(storage.Count == 1);
 
-        // call updateInfuseMultiplier
-        var updateValue = contract.abi.FindMethod("updateInfuseMultiplier");
-        Assert.IsNotNull(updateValue);
+		// call updateInfuseMultiplier
+		var updateValue = contract.abi.FindMethod("updateInfuseMultiplier");
+		Assert.IsNotNull(updateValue);
 
-        vm = new TestVM(contract, storage, updateValue);
-        vm.Stack.Push(VMObject.FromObject("4"));
-        result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, updateValue);
+		vm.Stack.Push(VMObject.FromObject("4"));
+		result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 1);
+		Assert.IsTrue(storage.Count == 1);
 
-        // call getInfuseMultiplier
-        var getValue = contract.abi.FindMethod("getInfuseMultiplier");
-        Assert.IsNotNull(getValue);
+		// call getInfuseMultiplier
+		var getValue = contract.abi.FindMethod("getInfuseMultiplier");
+		Assert.IsNotNull(getValue);
 
-        vm = new TestVM(contract, storage, getValue);
-        result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, getValue);
+		result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        var obj = vm.Stack.Pop();
-        var newVal = obj.AsNumber();
-        var expectedVal = 4;
+		var obj = vm.Stack.Pop();
+		var newVal = obj.AsNumber();
+		var expectedVal = 4;
 
-        Assert.IsTrue(newVal == expectedVal);
-    }
+		Assert.IsTrue(newVal == expectedVal);
+	}
 
-    [Test]
-    public void RandomNumber()
-    {
-        var str = "hello";
+	[Test]
+	public void RandomNumber()
+	{
+		var str = "hello";
 
-        var sourceCode =
-            @"
+		var sourceCode =
+			@"
 contract test {
 	import Random;
 	import Hash;
@@ -290,29 +290,29 @@ contract test {
 
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var mutateState = contract.abi.FindMethod("mutateState");
-        Assert.IsNotNull(mutateState);
+		var mutateState = contract.abi.FindMethod("mutateState");
+		Assert.IsNotNull(mutateState);
 
-        vm = new TestVM(contract, storage, mutateState);
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, mutateState);
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(storage.Count == 2);
+		Assert.IsTrue(storage.Count == 2);
 
-        Assert.IsTrue(vm.Stack.Count == 1);
+		Assert.IsTrue(vm.Stack.Count == 1);
 
-        var obj = vm.Stack.Pop();
-        var state = obj.AsNumber();
+		var obj = vm.Stack.Pop();
+		var state = obj.AsNumber();
 
-        var expectedState = -4;
+		var expectedState = -4;
 
-        Assert.IsTrue(state == expectedState);
-    }
+		Assert.IsTrue(state == expectedState);
+	}
 }

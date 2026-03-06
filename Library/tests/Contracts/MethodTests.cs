@@ -13,11 +13,11 @@ namespace TOMBLib.Tests.Contracts;
 
 public class MethodTests
 {
-    [Test]
-    public void DuplicatedMethodNames()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void DuplicatedMethodNames()
+	{
+		var sourceCode =
+			@"
 contract test {
     public testme(x:number): number {
          return 5;
@@ -27,18 +27,18 @@ contract test {
          return ""zero"";
      }}";
 
-        var parser = new TombLangCompiler();
+		var parser = new TombLangCompiler();
 
-        Assert.Catch<CompilerException>(() =>
-        {
-            var contract = parser.Process(sourceCode).First();
-        });
-    }
+		Assert.Catch<CompilerException>(() =>
+		{
+			var contract = parser.Process(sourceCode).First();
+		});
+	}
 
-    [Test]
-    public void TooManyArgs()
-    {
-        var sourceCode = @"
+	[Test]
+	public void TooManyArgs()
+	{
+		var sourceCode = @"
 contract arrays {
     import Array;
 
@@ -52,19 +52,19 @@ contract arrays {
 }
 ";
 
-        var parser = new TombLangCompiler();
+		var parser = new TombLangCompiler();
 
-        Assert.Catch<CompilerException>(() =>
-        {
-            var contract = parser.Process(sourceCode).First();
-        });
-    }
+		Assert.Catch<CompilerException>(() =>
+		{
+			var contract = parser.Process(sourceCode).First();
+		});
+	}
 
-    [Test]
-    public void TestLocalCallViaThis()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void TestLocalCallViaThis()
+	{
+		var sourceCode =
+			@"
 contract test {
     private sum(x:number, y:number) : number
     { return x + y; }
@@ -75,33 +75,33 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        // call fetch
-        var fetch = contract.abi.FindMethod("fetch");
-        Assert.IsNotNull(fetch);
+		// call fetch
+		var fetch = contract.abi.FindMethod("fetch");
+		Assert.IsNotNull(fetch);
 
-        vm = new TestVM(contract, storage, fetch);
-        vm.Stack.Push(VMObject.FromObject(10));
-        var state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
-        var result = vm.Stack.Pop().AsNumber();
+		vm = new TestVM(contract, storage, fetch);
+		vm.Stack.Push(VMObject.FromObject(10));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
+		var result = vm.Stack.Pop().AsNumber();
 
-        Assert.IsTrue(result == 11);
-    }
+		Assert.IsTrue(result == 11);
+	}
 
-    [Test]
-    public void TestContractCallViaCallMethod()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void TestContractCallViaCallMethod()
+	{
+		var sourceCode =
+			@"
 contract test {
     import Call;
 
@@ -114,33 +114,33 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        // call fetch
-        var fetch = contract.abi.FindMethod("fetch");
-        Assert.IsNotNull(fetch);
+		// call fetch
+		var fetch = contract.abi.FindMethod("fetch");
+		Assert.IsNotNull(fetch);
 
-        vm = new TestVM(contract, storage, fetch);
-        vm.Stack.Push(VMObject.FromObject(10));
-        var state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
-        var result = vm.Stack.Pop().AsNumber();
+		vm = new TestVM(contract, storage, fetch);
+		vm.Stack.Push(VMObject.FromObject(10));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
+		var result = vm.Stack.Pop().AsNumber();
 
-        Assert.IsTrue(result == 11);
-    }
+		Assert.IsTrue(result == 11);
+	}
 
-    [Test]
-    public void TestContractLengthViaParamNameWithNumber()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void TestContractLengthViaParamNameWithNumber()
+	{
+		var sourceCode =
+			@"
 contract test {
     import Call;
 
@@ -159,27 +159,27 @@ contract test {
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var keys = PhantasmaKeys.Generate();
+		var keys = PhantasmaKeys.Generate();
 
-        // call fetch
-        var fetch = contract.abi.FindMethod("fetch");
-        Assert.IsNotNull(fetch);
+		// call fetch
+		var fetch = contract.abi.FindMethod("fetch");
+		Assert.IsNotNull(fetch);
 
-        vm = new TestVM(contract, storage, fetch);
-        vm.Stack.Push(VMObject.FromObject("helloworld"));
-        var state = vm.Execute();
-        Assert.IsTrue(state == ExecutionState.Halt);
-        var result = vm.Stack.Pop().AsNumber();
-        BigInteger expected = "helloworld".Length;
+		vm = new TestVM(contract, storage, fetch);
+		vm.Stack.Push(VMObject.FromObject("helloworld"));
+		var state = vm.Execute();
+		Assert.IsTrue(state == ExecutionState.Halt);
+		var result = vm.Stack.Pop().AsNumber();
+		BigInteger expected = "helloworld".Length;
 
 
-        Assert.AreEqual(expected, result);
-    }
+		Assert.That(result, Is.EqualTo(expected));
+	}
 }

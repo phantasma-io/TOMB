@@ -10,11 +10,11 @@ namespace TOMBLib.Tests.Contracts;
 
 public class ReturnTests
 {
-    [Test]
-    public void MultiResultsSimple()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void MultiResultsSimple()
+	{
+		var sourceCode =
+			@"
 contract test{                   
     public getStrings(): string* {
          return ""hello"";
@@ -22,36 +22,36 @@ contract test{
     }
 }";
 
-        var parser = new TombLangCompiler();
-        var contract = parser.Process(sourceCode).First();
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
 
-        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
 
-        TestVM vm;
+		TestVM vm;
 
-        var getStrings = contract.abi.FindMethod("getStrings");
-        Assert.IsNotNull(getStrings);
+		var getStrings = contract.abi.FindMethod("getStrings");
+		Assert.IsNotNull(getStrings);
 
-        vm = new TestVM(contract, storage, getStrings);
-        var result = vm.Execute();
-        Assert.IsTrue(result == ExecutionState.Halt);
+		vm = new TestVM(contract, storage, getStrings);
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
 
-        Assert.IsTrue(vm.Stack.Count == 2);
+		Assert.IsTrue(vm.Stack.Count == 2);
 
-        var obj = vm.Stack.Pop();
-        var x = obj.AsString();
-        Assert.IsTrue(x == "world");
+		var obj = vm.Stack.Pop();
+		var x = obj.AsString();
+		Assert.IsTrue(x == "world");
 
-        obj = vm.Stack.Pop();
-        x = obj.AsString();
-        Assert.IsTrue(x == "hello");
-    }
+		obj = vm.Stack.Pop();
+		x = obj.AsString();
+		Assert.IsTrue(x == "hello");
+	}
 
-    [Test]
-    public void MultiResultsEarlyReturn()
-    {
-        var sourceCode =
-            @"
+	[Test]
+	public void MultiResultsEarlyReturn()
+	{
+		var sourceCode =
+			@"
 contract test{                   
     public getStrings(): string* {
          return ""ok"";
@@ -60,12 +60,12 @@ contract test{
     }
 }";
 
-        var parser = new TombLangCompiler();
+		var parser = new TombLangCompiler();
 
-        Assert.Catch<CompilerException>(() =>
-        {
-            var contract = parser.Process(sourceCode).First();
-        });
-    }
+		Assert.Catch<CompilerException>(() =>
+		{
+			var contract = parser.Process(sourceCode).First();
+		});
+	}
 
 }
