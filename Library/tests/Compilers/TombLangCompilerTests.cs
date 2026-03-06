@@ -104,6 +104,21 @@ contract test{
     }
 }";
 
+    private const string ForLoopScopeContract = @"
+contract test {
+    public run():number
+    {
+        local sum:number = 0;
+        for (local i=0; i<3; i+=1)
+        {
+            sum += i;
+        }
+
+        local i:number = 10;
+        return sum + i;
+    }
+}";
+
     private NativeCheckMode _originalMode;
     private Action<string> _originalWarningHandler = null!;
     private List<string> _warnings = null!;
@@ -212,6 +227,18 @@ contract test{
         var parser = new TombLangCompiler();
 
         var modules = parser.Process(StructConstructorAfterImportContract);
+
+        Assert.That(modules.Length, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void ForLoopScope_DoesNotLeakLoopVariable()
+    {
+        // Regression guard: "for (local i ...)" must not pollute parent scope.
+        // Redeclaring i after the loop should compile.
+        var parser = new TombLangCompiler();
+
+        var modules = parser.Process(ForLoopScopeContract);
 
         Assert.That(modules.Length, Is.EqualTo(1));
     }

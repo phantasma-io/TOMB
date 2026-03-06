@@ -1186,8 +1186,6 @@ namespace Phantasma.Tomb.Compilers
 
                     case "for":
                         {
-                            var forCommand = new ForStatement(scope);
-
                             ExpectToken("(");
 
                             bool mustExist;
@@ -1203,8 +1201,13 @@ namespace Phantasma.Tomb.Compilers
                                 Rewind();
                             }
 
+                            var forCommand = new ForStatement(scope);
+                            var forScope = forCommand.Scope;
+
                             AssignStatement initCmd;
-                            forCommand.loopVar = ParseVariableDeclaration(scope, out initCmd, mustExist);
+                            // Loop variable and all loop expressions belong to the dedicated for-scope.
+                            // This prevents leaking "local i" into parent scope after the loop.
+                            forCommand.loopVar = ParseVariableDeclaration(forScope, out initCmd, mustExist);
 
                             if (initCmd == null)
                             {
@@ -1215,7 +1218,7 @@ namespace Phantasma.Tomb.Compilers
                                 forCommand.initStatement = initCmd;
                             }
 
-                            forCommand.condition = ExpectExpression(scope);
+                            forCommand.condition = ExpectExpression(forScope);
 
                             if (forCommand.condition.ResultType.Kind != VarKind.Bool)
                             {
@@ -1234,12 +1237,12 @@ namespace Phantasma.Tomb.Compilers
 
                             if (next.kind == TokenKind.Postfix)
                             {
-                                forCommand.loopStatement = BuildPostfixStatement(scope, varName, next.value);
+                                forCommand.loopStatement = BuildPostfixStatement(forScope, varName, next.value);
                             }
                             else
                             if (next.kind == TokenKind.Operator && next.value.EndsWith("="))
                             {
-                                forCommand.loopStatement = BuildBinaryShortAssigment(scope, varName, next.value);
+                                forCommand.loopStatement = BuildBinaryShortAssigment(forScope, varName, next.value);
                             }
                             else
                             {
@@ -1250,7 +1253,7 @@ namespace Phantasma.Tomb.Compilers
 
                             ExpectToken("{");
 
-                            forCommand.body = ParseCommandBlock(forCommand.Scope, method);
+                            forCommand.body = ParseCommandBlock(forScope, method);
 
                             ExpectToken("}");
 
