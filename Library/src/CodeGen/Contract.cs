@@ -1,12 +1,11 @@
-using Phantasma.Business.VM;
-using Phantasma.Core.Domain;
+using PhantasmaPhoenix.Protocol;
 using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Domain.Validation;
 using Phantasma.Core.Domain.VM.Structs;
 using Phantasma.Tomb.AST;
 using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.AST.Expressions;
 using Phantasma.Tomb.AST.Statements;
+using Phantasma.Tomb.Validation;
 
 namespace Phantasma.Tomb.CodeGen
 {
@@ -268,7 +267,7 @@ namespace Phantasma.Tomb.CodeGen
             }
 
             var vmType = MethodInterface.ConvertType(returnType);
-            if (!ValidationUtils.IsValidMethod(name, vmType))
+            if (!MethodNameValidation.IsValidMethod(name, vmType))
             {
                 throw new CompilerException($"Invalid method definition: {name}:{returnType}");
             }

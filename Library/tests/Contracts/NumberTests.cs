@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using Phantasma.Core.Cryptography;
-using Phantasma.Core.Domain;
+using PhantasmaPhoenix.Cryptography;
+using PhantasmaPhoenix.Protocol;
 using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Domain.Execution.Enums;
-using Phantasma.Core.Domain.VM;
-using Phantasma.Core.Utils;
+using PhantasmaPhoenix.VM;
+using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.Compilers;
 
 namespace TOMBLib.Tests.Contracts;

@@ -4,9 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Phantasma.Core.Cryptography;
-using Phantasma.Core.Cryptography.Structs;
-using Phantasma.Core.Numerics;
 using Phantasma.Tomb.AST;
 
 namespace Phantasma.Tomb.Lexers
@@ -92,7 +89,7 @@ namespace Phantasma.Tomb.Lexers
                 }
                 else
                 {
-                    addr = Address.FromText(value);
+                    addr = Address.Parse(value, true);
                 }
 
                 value = "0x" + Base16.Encode(addr.ToByteArray());

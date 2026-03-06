@@ -21,7 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Phantasma.Business" Version="1.1.0" />
+    <PackageReference Include="PhantasmaPhoenix.Core" Version="0.2.5" />
+    <PackageReference Include="PhantasmaPhoenix.Cryptography" Version="0.2.2" />
+    <PackageReference Include="PhantasmaPhoenix.Protocol" Version="0.2.10" />
+    <PackageReference Include="PhantasmaPhoenix.VM" Version="0.1.1" />
+    <PackageReference Include="PhantasmaPhoenix.NFT" Version="0.1.1" />
+    <PackageReference Include="PhantasmaPhoenix.Protocol.Carbon" Version="0.2.19" />
   </ItemGroup>
 
 </Project>

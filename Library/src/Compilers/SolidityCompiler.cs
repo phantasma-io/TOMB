@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SdkValidation = PhantasmaPhoenix.Protocol.ValidationUtils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,9 +11,8 @@ using Phantasma.Tomb.AST;
 using Phantasma.Tomb.CodeGen;
 using Phantasma.Tomb.Lexers;
 using Phantasma.Tomb.AST.Expressions;
-using Phantasma.Core.Domain;
+using PhantasmaPhoenix.Protocol;
 using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Domain.Validation;
 
 namespace Phantasma.Tomb.Compilers
 {
@@ -80,7 +80,7 @@ namespace Phantasma.Tomb.Compilers
                         {
                             var contractName = ExpectIdentifier().ToLower();
 
-                            if (!ValidationUtils.IsValidIdentifier(contractName))
+                            if (!SdkValidation.IsValidIdentifier(contractName))
                             {
                                 throw new CompilerException("contract does not have a valid name: " + contractName);
                             }

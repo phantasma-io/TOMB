@@ -1,6 +1,6 @@
 ﻿using Phantasma.Core.Domain;
 using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Numerics;
+using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.CodeGen;
 
 using System;

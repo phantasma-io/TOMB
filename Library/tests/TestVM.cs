@@ -1,19 +1,13 @@
-using Phantasma.Business.Blockchain.VM;
 using Phantasma.Business.CodeGen.Assembler;
-using Phantasma.Business.VM;
-using Phantasma.Business.VM.Utils;
-using Phantasma.Core.Cryptography.Structs;
-using Phantasma.Core.Domain;
 using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Domain.Execution.Enums;
-using Phantasma.Core.Domain.Serializer;
-using Phantasma.Core.Domain.Token.Structs;
-using Phantasma.Core.Domain.VM;
-using Phantasma.Core.Domain.VM.Enums;
-using Phantasma.Core.Numerics;
 using Phantasma.Tomb.CodeGen;
+using PhantasmaPhoenix.Core;
+using PhantasmaPhoenix.Cryptography;
+using PhantasmaPhoenix.Protocol;
+using PhantasmaPhoenix.VM;
 using System.Numerics;
-using ExecutionContext = Phantasma.Core.Domain.Execution.ExecutionContext;
+using TOMBLib.Tests.Bridge;
+using VmExecutionContext = PhantasmaPhoenix.VM.ExecutionContext;
 
 namespace TOMBLib.Tests;
 
@@ -24,8 +18,8 @@ public class TestVM : VirtualMachine
     private Dictionary<string, Func<VirtualMachine, ExecutionState>> _interops =
         new Dictionary<string, Func<VirtualMachine, ExecutionState>>();
 
-    private Func<string, ExecutionContext> _contextLoader;
-    private Dictionary<string, ScriptContext> contexts;
+    private Func<string, VmExecutionContext> _contextLoader;
+    private Dictionary<string, VmExecutionContext> contexts;
     private Dictionary<byte[], byte[]> storage;
 
     public TestVM(Module module, Dictionary<byte[], byte[]> storage, ContractMethod method) : base(module.script,
@@ -35,10 +29,10 @@ public class TestVM : VirtualMachine
         this.storage = storage;
         RegisterContextLoader(ContextLoader);
 
-        RegisterMethod("ABI()", ExtCalls.Constructor_ABI);
-        RegisterMethod("Address()", ExtCalls.Constructor_Address);
-        RegisterMethod("Hash()", ExtCalls.Constructor_Hash);
-        RegisterMethod("Timestamp()", ExtCalls.Constructor_Timestamp);
+        RegisterMethod("ABI()", ConstructorInteropCalls.Constructor_ABI);
+        RegisterMethod("Address()", ConstructorInteropCalls.Constructor_Address);
+        RegisterMethod("Hash()", ConstructorInteropCalls.Constructor_Hash);
+        RegisterMethod("Timestamp()", ConstructorInteropCalls.Constructor_Timestamp);
 
         RegisterMethod("Data.Set", Data_Set);
         RegisterMethod("Data.Get", Data_Get);
@@ -51,10 +45,10 @@ public class TestVM : VirtualMachine
 
         RegisterMethod("Runtime.GetAvailableTokenSymbols", Runtime_GetAvailableTokenSymbols);
 
-        contexts = new Dictionary<string, ScriptContext>();
+        contexts = new Dictionary<string, VmExecutionContext>();
     }
 
-    private ExecutionContext ContextLoader(string contextName)
+    private VmExecutionContext ContextLoader(string contextName)
     {
         if (contexts.ContainsKey(contextName))
             return contexts[contextName];
@@ -94,7 +88,7 @@ public class TestVM : VirtualMachine
         _interops[method] = callback;
     }
 
-    public void RegisterContextLoader(Func<string, ExecutionContext> callback)
+    public void RegisterContextLoader(Func<string, VmExecutionContext> callback)
     {
         _contextLoader = callback;
     }
@@ -109,7 +103,7 @@ public class TestVM : VirtualMachine
         throw new VMException(this, $"unknown interop: {method}");
     }
 
-    public override ExecutionContext LoadContext(string contextName)
+    public override VmExecutionContext LoadContext(string contextName)
     {
         if (_contextLoader != null)
         {
@@ -188,8 +182,10 @@ public class TestVM : VirtualMachine
 
     private ExecutionState Runtime_TransactionHash(VirtualMachine vm)
     {
+        // Runtime.transactionHash is consumed by Hash helpers (for example Hash.toNumber()).
+        // Returning raw bytes keeps downstream casts deterministic in contract scripts.
         var val = VMObject.FromObject(
-            Hash.FromString("F6C095A0ED5984F76994EDD8BA555EC10A4B601337B0A15F94162DCD38348534"));
+            Hash.FromString("F6C095A0ED5984F76994EDD8BA555EC10A4B601337B0A15F94162DCD38348534").ToByteArray());
         this.Stack.Push(val);
 
         return ExecutionState.Running;

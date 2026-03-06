@@ -1,4 +1,5 @@
 using System;
+using SdkValidation = PhantasmaPhoenix.Protocol.ValidationUtils;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,12 +9,11 @@ using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.AST.Statements;
 using Phantasma.Tomb.AST.Expressions;
 using Phantasma.Tomb.Lexers;
-using Phantasma.Core.Domain;
-using Phantasma.Core.Numerics;
+using PhantasmaPhoenix.Protocol;
+using PhantasmaPhoenix.Core;
 using Phantasma.Core.Domain.Triggers.Enums;
 using Phantasma.Core.Domain.Token.Enums;
 using Phantasma.Core.Domain.Tasks.Enum;
-using Phantasma.Core.Domain.Validation;
 using Phantasma.Core.Domain.Contract;
 using Phantasma.Core.Domain.Events.Structs;
 
@@ -175,14 +175,14 @@ namespace Phantasma.Tomb.Compilers
 
                             if (firstToken.value == "token")
                             {
-                                if (!ValidationUtils.IsValidTicker(contractName))
+                                if (!SdkValidation.IsValidTicker(contractName))
                                 {
                                     throw new CompilerException("token does not have a valid name: " + contractName);
                                 }
                             }
                             else
                             {
-                                if (!ValidationUtils.IsValidIdentifier(contractName))
+                                if (!SdkValidation.IsValidIdentifier(contractName))
                                 {
                                     throw new CompilerException("contract does not have a valid name: " + contractName);
                                 }

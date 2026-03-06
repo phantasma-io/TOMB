@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Phantasma.Core.Domain;
-using Phantasma.Core.Domain.Validation;
+using PhantasmaPhoenix.Protocol;
 using Phantasma.Tomb.CodeGen;
+using Phantasma.Tomb.Validation;
 
 namespace Phantasma.Tomb.AST.Declarations
 {
@@ -31,7 +31,7 @@ namespace Phantasma.Tomb.AST.Declarations
             {
                 var vmType = MethodInterface.ConvertType(returnType);
 
-                if (!ValidationUtils.IsValidMethod(name, vmType))
+                if (!MethodNameValidation.IsValidMethod(name, vmType))
                 {
                     throw new CompilerException("invalid method name: " + name);
                 }

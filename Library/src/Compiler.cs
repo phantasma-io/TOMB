@@ -1,10 +1,10 @@
-﻿using Phantasma.Business.VM;
-using Phantasma.Core.Domain;
+﻿using PhantasmaPhoenix.Protocol;
 using Phantasma.Tomb.AST;
 using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.AST.Expressions;
 using Phantasma.Tomb.AST.Statements;
 using Phantasma.Tomb.CodeGen;
+using Phantasma.Tomb.Validation;
 
 /* NOTE - In order to implement support for another programming language:
  * 1) derive a class from this and implement the abstract method GenerateModules
@@ -27,6 +27,10 @@ namespace Phantasma.Tomb
     public abstract class Compiler
     {
         public static bool DebugMode = false; // enable this to print some debugging info
+        // Runtime availability checks for native-contract calls are enabled by default to prevent
+        // generating bytecode that is known to fail against the current Carbon runtime baseline.
+        public static NativeCheckMode NativeCheckMode { get; set; } = NativeCheckMode.Error;
+        public static Action<string> WarningHandler { get; set; } = warning => Console.WriteLine(warning);
 
         public readonly int TargetProtocolVersion;
 
@@ -43,6 +47,12 @@ namespace Phantasma.Tomb
         private string[] lines;
 
         public static Compiler Instance { get; private set; }
+
+        public static void EmitWarning(Node node, string warning)
+        {
+            var formatted = $"line {node.LineNumber}: {warning}";
+            WarningHandler?.Invoke(formatted);
+        }
 
         // This mode is allowed to use things like AddModule() to generate multiple modules
         // Feel also free to use the FetchToken(), Rewind() and the multiple ExpectXXX
@@ -65,6 +75,9 @@ namespace Phantasma.Tomb
         public Module[] Process(string sourceCode)
         {
             this.Lexer = CreateLexer();
+
+            // Reset deduplicated native-check warnings for each compilation run.
+            NativeMethodAvailability.ResetSession();
 
             this.tokens = Lexer.Process(sourceCode);
 
@@ -1027,9 +1040,15 @@ namespace Phantasma.Tomb
 
             var firstIndex = implicitArg != null ? 1 : 0;
 
+            bool isVariadicContractGateway =
+                (expr.method.Library.Name == "Call" && expr.method.Name == "contract") ||
+                (expr.method.Library.Name == "Contract" && expr.method.Name == "call");
+
+            // Both gateways share the same runtime semantics (contract + method + variadic args),
+            // so parse them with the same variadic branch.
             bool isCallLibrary = expr.method.Library.Name == "Call";
 
-            if (isCallLibrary)
+            if (isCallLibrary || isVariadicContractGateway)
             {
                 int i = 0;
                 do

@@ -3,7 +3,7 @@ using Phantasma.Tomb.CodeGen;
 
 using System;
 using System.Globalization;
-using Phantasma.Core.Numerics;
+using PhantasmaPhoenix.Core;
 
 namespace Phantasma.Tomb.AST.Expressions
 {
@@ -56,7 +56,7 @@ namespace Phantasma.Tomb.AST.Expressions
                             throw new CompilerException("Invalid decimal literal: " + this.value);
                         }
 
-                        val = UnitConversion.ToBigInteger(temp, decType.decimals).ToString();
+                        val = UnitConversion.ToBigInteger(temp, (uint)decType.decimals).ToString();
                         break;
                     }
 

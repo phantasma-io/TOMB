@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Phantasma.Tomb.CodeGen;
 using Phantasma.Tomb.AST.Expressions;
 using Phantasma.Tomb.AST.Declarations;
-using Phantasma.Core.Domain;
-using Phantasma.Core.Domain.VM.Enums;
+using PhantasmaPhoenix.Protocol;
+using PhantasmaPhoenix.VM;
 
 namespace Phantasma.Tomb.AST
 {

@@ -1,5 +1,6 @@
 ﻿using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.CodeGen;
+using Phantasma.Tomb.Validation;
 
 using System;
 using System.Collections.Generic;
@@ -119,6 +120,10 @@ namespace Phantasma.Tomb.AST.Expressions
 
         public override Register GenerateCode(CodeGenerator output)
         {
+            // Validate native-contract availability before emitting call opcodes so the
+            // failure mode is explicit at compile time instead of surfacing only at runtime.
+            NativeMethodAvailability.ValidateOrReport(this, method, Compiler.NativeCheckMode);
+
             Register reg;
 
             if (this.method.PreCallback != null)
@@ -130,7 +135,12 @@ namespace Phantasma.Tomb.AST.Expressions
                 reg = Compiler.Instance.AllocRegister(output, this, this.NodeID);
             }
 
+            bool isDynamicContractGateway =
+                (method.Library.Name == "Call" && method.Name == "contract") ||
+                (method.Library.Name == "Contract" && method.Name == "call");
+
             bool isCallLibrary = method.Library.Name == "Call";
+            bool usesDynamicTargetLiteral = isCallLibrary || isDynamicContractGateway;
 
             string customAlias = null;
 
@@ -142,7 +152,7 @@ namespace Phantasma.Tomb.AST.Expressions
 
                     Register argReg;
 
-                    if (isCallLibrary)
+                    if (usesDynamicTargetLiteral)
                     {
                         if (i == 0)
                         {

@@ -1,8 +1,7 @@
 ﻿using Phantasma.Business.Blockchain.Contracts.Native;
 using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Domain.Contract.Enums;
-using Phantasma.Core.Domain.VM.Enums;
-using Phantasma.Core.Numerics;
+using PhantasmaPhoenix.VM;
+using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.AST;
 using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.AST.Expressions;
@@ -744,8 +743,10 @@ namespace Phantasma.Tomb.CodeGen
                         libDecl.AddMethod("getSoldAmount", MethodImplementationType.ContractCall, VarKind.Number, new[] { new MethodParameter("saleHash", VarKind.Hash) }).SetContract(contract).SetAlias(nameof(SaleContract.GetSoldAmount));
                         libDecl.AddMethod("purchase", MethodImplementationType.ContractCall, VarKind.None, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("saleHash", VarKind.Hash), new MethodParameter("quoteSymbol", VarKind.String), new MethodParameter("quoteAmount", VarKind.Number) }).SetContract(contract).SetAlias(nameof(SaleContract.Purchase));
                         libDecl.AddMethod("closeSale", MethodImplementationType.ContractCall, VarKind.None, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("saleHash", VarKind.Hash) }).SetContract(contract).SetAlias(nameof(SaleContract.CloseSale));
-                        libDecl.AddMethod("getLatestSaleHash", MethodImplementationType.ContractCall, VarKind.Hash, new MethodParameter[] { }).SetContract(contract).SetAlias(nameof(SaleContract.CloseSale));
-                        libDecl.AddMethod("editSalePrice", MethodImplementationType.ContractCall, VarKind.Hash, new[] { new MethodParameter("saleHash", VarKind.Hash), new MethodParameter("price", VarKind.Number) }).SetContract(contract).SetAlias(nameof(SaleContract.CloseSale));
+                        // Keep method-to-alias mapping 1:1 so diagnostics and runtime call targets
+                        // reflect the actual API surface instead of silently rerouting to another method.
+                        libDecl.AddMethod("getLatestSaleHash", MethodImplementationType.ContractCall, VarKind.Hash, new MethodParameter[] { }).SetContract(contract).SetAlias(nameof(SaleContract.GetLatestSaleHash));
+                        libDecl.AddMethod("editSalePrice", MethodImplementationType.ContractCall, VarKind.Hash, new[] { new MethodParameter("saleHash", VarKind.Hash), new MethodParameter("price", VarKind.Number) }).SetContract(contract).SetAlias(nameof(SaleContract.EditSalePrice));
                         break;
                     }
 
@@ -755,7 +756,7 @@ namespace Phantasma.Tomb.CodeGen
                         libDecl.AddMethod("getMasterThreshold", MethodImplementationType.ContractCall, VarKind.Number, new MethodParameter[] { }).SetContract(contract).SetAlias(nameof(StakeContract.GetMasterThreshold));
                         libDecl.AddMethod("isMaster", MethodImplementationType.ContractCall, VarKind.Bool, new[] { new MethodParameter("address", VarKind.Address) }).SetContract(contract).SetAlias(nameof(StakeContract.IsMaster));
                         libDecl.AddMethod("getMasterCount", MethodImplementationType.ContractCall, VarKind.Number, new MethodParameter[] { }).SetContract(contract).SetAlias(nameof(StakeContract.GetMasterCount));
-                        libDecl.AddMethod("getMasterAddresses", MethodImplementationType.ContractCall, VarKind.Number, new MethodParameter[] { }).SetContract(contract).SetAlias(nameof(StakeContract.GetMasterCount));
+                        libDecl.AddMethod("getMasterAddresses", MethodImplementationType.ContractCall, VarKind.Number, new MethodParameter[] { }).SetContract(contract).SetAlias(nameof(StakeContract.GetMasterAddresses));
                         libDecl.AddMethod("getClaimMasterCount", MethodImplementationType.ContractCall, VarKind.Number, new[] { new MethodParameter("claimDate", VarKind.Timestamp) }).SetContract(contract).SetAlias(nameof(StakeContract.GetClaimMasterCount));
                         libDecl.AddMethod("getMasterClaimDate", MethodImplementationType.ContractCall, VarKind.Timestamp, new[] { new MethodParameter("claimDistance", VarKind.Number) }).SetContract(contract).SetAlias(nameof(StakeContract.GetMasterClaimDate));
                         libDecl.AddMethod("getMasterDate", MethodImplementationType.ContractCall, VarKind.Timestamp, new[] { new MethodParameter("target", VarKind.Address) }).SetContract(contract).SetAlias(nameof(StakeContract.GetMasterDate));

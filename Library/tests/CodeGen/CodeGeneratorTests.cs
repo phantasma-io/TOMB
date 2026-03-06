@@ -3,11 +3,10 @@ namespace TOMBLib.Tests.CodeGen;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using Phantasma.Core.Cryptography.Structs;
-using Phantasma.Core.Domain;
-using Phantasma.Core.Domain.Execution.Enums;
-using Phantasma.Core.Domain.VM;
-using Phantasma.Core.Utils;
+using PhantasmaPhoenix.Protocol;
+using PhantasmaPhoenix.Cryptography;
+using PhantasmaPhoenix.VM;
+using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.Compilers;
 
 public class CodeGeneratorTests
@@ -34,7 +33,7 @@ contract test {
         Assert.IsNotNull(cast);
 
         var expected = "P2K7GyVMC3f9XxKRji5gfg91WvutoHs2RyB6KzQxuaAUUeo";
-        var addr = Address.FromText(expected);
+        var addr = Address.Parse(expected, true);
 
         var vm = new TestVM(contract, storage, cast);
         vm.Stack.Push(VMObject.FromObject(addr));

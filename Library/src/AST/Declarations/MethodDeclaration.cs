@@ -1,7 +1,7 @@
 ﻿using Phantasma.Core.Domain;
 using Phantasma.Core.Domain.Contract;
 using Phantasma.Core.Domain.Contract.Structs;
-using Phantasma.Core.Domain.VM.Enums;
+using PhantasmaPhoenix.VM;
 using Phantasma.Tomb.AST.Statements;
 using Phantasma.Tomb.CodeGen;
 

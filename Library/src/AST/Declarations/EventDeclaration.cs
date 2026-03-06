@@ -5,19 +5,12 @@ using System.Text;
 using System.Numerics;
 using Phantasma.Core.Domain;
 using Phantasma.Tomb.CodeGen;
-using Phantasma.Core.Cryptography;
 using Phantasma.Business.Blockchain;
 using Phantasma.Business.CodeGen.Assembler;
 using Phantasma.Business.Blockchain.VM;
 using Phantasma.Core.Domain.VM;
 using Phantasma.Core.Domain.Interfaces;
 using Phantasma.Core.Domain.Token.Structs;
-using Phantasma.Core.Cryptography.Structs;
-using Phantasma.Core.Domain.Token.Enums;
-using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Domain.VM.Enums;
-using Phantasma.Core.Domain.Events.Structs;
-using Phantasma.Core.Domain.Execution.Enums;
 
 namespace Phantasma.Tomb.AST.Declarations
 {
@@ -254,7 +247,7 @@ namespace Phantasma.Tomb.AST.Declarations
 
                 var obj = GenerateTestObject(this.returnType);
                 vm.Stack.Push(obj);
-                vm.Stack.Push(VMObject.FromObject(Address.FromText("S3dApERMJUMRYECjyKLJioz2PCBUY6HBnktmC9u1obhDAgm")));
+                vm.Stack.Push(VMObject.FromObject(Address.Parse("S3dApERMJUMRYECjyKLJioz2PCBUY6HBnktmC9u1obhDAgm", true)));
                 var state = vm.Execute();
 
                 if (state != ExecutionState.Halt)

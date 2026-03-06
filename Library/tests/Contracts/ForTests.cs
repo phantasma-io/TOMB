@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using Phantasma.Core.Domain;
-using Phantasma.Core.Domain.Execution.Enums;
-using Phantasma.Core.Utils;
+using PhantasmaPhoenix.Protocol;
+using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.Compilers;
 
 namespace TOMBLib.Tests.Contracts;

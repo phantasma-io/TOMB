@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Phantasma.Tomb.Compilers;
-using Phantasma.Core.Utils;
 using Phantasma.Tomb;
 using Phantasma.Core.Domain;
-using Phantasma.Core.Domain.Execution.Enums;
+using PhantasmaPhoenix.Core;
+using PhantasmaPhoenix.Protocol;
 
 namespace TOMBLib.Tests
 {
@@ -276,7 +276,7 @@ contract test {
 
         //    simulator.BeginBlock();
         //    simulator.GenerateCustomTransaction(keys, ProofOfWork.Minimal,
-        //            () => ScriptUtils.BeginScript().AllowGas(keys.Address, Address.FromText(token.address), 1, 9999)
+        //            () => ScriptUtils.BeginScript().AllowGas(keys.Address, Address.Parse(token.address), 1, 9999)
         //            .CallContract("GHOST", "mintToken", 0, 1, 1,
         //                keys.Address, 0, "GHOST", 1, "testnft", "desc1234567890", 1,
         //                "0", "0", "", "", "", "", "", "", "", 0, "", new Timestamp(1), "", 0)

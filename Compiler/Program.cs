@@ -6,10 +6,11 @@ using System.Text;
 using System.Collections.Generic;
 
 using Phantasma.Tomb.CodeGen;
+using Phantasma.Tomb.Validation;
 
 using Module = Phantasma.Tomb.CodeGen.Module;
-using Phantasma.Core.Numerics;
-using Phantasma.Core.Domain;
+using PhantasmaPhoenix.Cryptography;
+using DomainSettings = PhantasmaPhoenix.Protocol.DomainSettings;
 
 namespace Phantasma.Tomb
 {
@@ -122,10 +123,36 @@ namespace Phantasma.Tomb
             return null;
         }
 
+        static bool TryParseNativeCheckMode(string value, out NativeCheckMode mode)
+        {
+            if (string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+            {
+                mode = NativeCheckMode.Off;
+                return true;
+            }
+
+            if (string.Equals(value, "warn", StringComparison.OrdinalIgnoreCase))
+            {
+                mode = NativeCheckMode.Warn;
+                return true;
+            }
+
+            if (string.Equals(value, "error", StringComparison.OrdinalIgnoreCase))
+            {
+                mode = NativeCheckMode.Error;
+                return true;
+            }
+
+            mode = NativeCheckMode.Error;
+            return false;
+        }
+
         static void Main(string[] args)
         {
             string sourceFileName = null;
             string outputPath = null;
+
+            Compiler.WarningHandler = ShowWarning;
 
             int targetProtocolVersion = DomainSettings.LatestKnownProtocol;
 
@@ -171,6 +198,20 @@ namespace Phantasma.Tomb
                     case "debug":
                         {
                             Compiler.DebugMode = true;
+                            break;
+                        }
+
+                    case "nativecheck":
+                        {
+                            NativeCheckMode mode;
+                            if (TryParseNativeCheckMode(value, out mode))
+                            {
+                                Compiler.NativeCheckMode = mode;
+                            }
+                            else
+                            {
+                                ShowWarning("Invalid nativecheck mode: " + value + " (expected off|warn|error)");
+                            }
                             break;
                         }
 

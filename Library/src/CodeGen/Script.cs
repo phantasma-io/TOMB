@@ -2,7 +2,7 @@
 using Phantasma.Tomb.AST;
 using Phantasma.Tomb.AST.Statements;
 using Phantasma.Tomb.AST.Declarations;
-using Phantasma.Core.Domain;
+using PhantasmaPhoenix.Protocol;
 using Phantasma.Core.Domain.Contract;
 
 namespace Phantasma.Tomb.CodeGen

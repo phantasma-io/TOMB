@@ -1,9 +1,9 @@
 using Phantasma.Business.Blockchain.Tokens;
 using Phantasma.Business.CodeGen.Assembler;
 using Phantasma.Core.Domain.Contract;
-using Phantasma.Core.Domain.VM.Enums;
+using PhantasmaPhoenix.VM;
 using Phantasma.Core.Domain.VM.Structs;
-using Phantasma.Core.Numerics;
+using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.AST;
 using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.AST.Expressions;

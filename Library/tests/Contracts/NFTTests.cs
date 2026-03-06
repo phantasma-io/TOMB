@@ -1,12 +1,11 @@
-using Phantasma.Core.Cryptography;
-using Phantasma.Core.Domain;
-using Phantasma.Core.Domain.Execution.Enums;
-using Phantasma.Core.Domain.Token.Structs;
-using Phantasma.Core.Domain.VM;
-using Phantasma.Core.Utils;
+using PhantasmaPhoenix.Cryptography;
+using PhantasmaPhoenix.Protocol;
+using PhantasmaPhoenix.VM;
+using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.Compilers;
 using System.Diagnostics;
 using System.Numerics;
+using TOMBLib.Tests.Bridge;
 
 namespace TOMBLib.Tests.Contracts;
 
