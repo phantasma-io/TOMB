@@ -40,10 +40,30 @@ public sealed class ContractInterface : ISerializable
 
 	public ContractMethod FindMethod(string name)
 	{
+		if (_methods.TryGetValue(name, out var method))
+		{
+			return method;
+		}
+
+		throw new InvalidOperationException($"Method not found in ABI: {name}");
+	}
+
+	public ContractMethod? TryFindMethod(string name)
+	{
 		return _methods.TryGetValue(name, out var method) ? method : null;
 	}
 
 	public ContractEvent FindEvent(byte value)
+	{
+		foreach (var evt in _events)
+		{
+			if (evt.value == value) return evt;
+		}
+
+		throw new InvalidOperationException($"Event not found in ABI: {value}");
+	}
+
+	public ContractEvent? TryFindEvent(byte value)
 	{
 		foreach (var evt in _events)
 		{

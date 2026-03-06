@@ -5,9 +5,9 @@ namespace Phantasma.Tomb.AST.Statements
 {
 	public class IfStatement : Statement
 	{
-		public Expression condition;
-		public StatementBlock body;
-		public StatementBlock @else;
+		public Expression? condition;
+		public StatementBlock? body;
+		public StatementBlock? @else;
 		public Scope Scope { get; }
 
 		//private int label;
@@ -18,12 +18,32 @@ namespace Phantasma.Tomb.AST.Statements
 			//this.label = Parser.Instance.AllocateLabel();
 		}
 
+		private Expression RequireCondition()
+		{
+			if (condition != null)
+			{
+				return condition;
+			}
+
+			throw new CompilerException("if condition not initialized");
+		}
+
+		private StatementBlock RequireBody()
+		{
+			if (body != null)
+			{
+				return body;
+			}
+
+			throw new CompilerException("if body not initialized");
+		}
+
 		public override void Visit(Action<Node> callback)
 		{
 			callback(this);
 
-			condition.Visit(callback);
-			body.Visit(callback);
+			RequireCondition().Visit(callback);
+			RequireBody().Visit(callback);
 			@else?.Visit(callback);
 		}
 
@@ -34,18 +54,20 @@ namespace Phantasma.Tomb.AST.Statements
 				return true;
 			}
 
-			return (node == this) || condition.IsNodeUsed(node) || body.IsNodeUsed(node);
+			return (node == this) || RequireCondition().IsNodeUsed(node) || RequireBody().IsNodeUsed(node);
 		}
 
 		public override void GenerateCode(CodeGenerator output)
 		{
-			var reg = condition.GenerateCode(output);
+			var ifCondition = RequireCondition();
+			var ifBody = RequireBody();
+			Register? reg = ifCondition.GenerateCode(output);
 
 			this.Scope.Enter(output);
 			if (@else != null)
 			{
 				output.AppendLine(this, $"JMPNOT {reg} @else_{this.NodeID}");
-				body.GenerateCode(output);
+				ifBody.GenerateCode(output);
 				output.AppendLine(this, $"JMP @then_{this.NodeID}");
 				output.AppendLine(this, $"@else_{this.NodeID}: NOP");
 				@else.GenerateCode(output);
@@ -53,7 +75,7 @@ namespace Phantasma.Tomb.AST.Statements
 			else
 			{
 				output.AppendLine(this, $"JMPNOT {reg} @then_{this.NodeID}");
-				body.GenerateCode(output);
+				ifBody.GenerateCode(output);
 			}
 			output.AppendLine(this, $"@then_{this.NodeID}: NOP");
 			this.Scope.Leave(output);
@@ -64,4 +86,3 @@ namespace Phantasma.Tomb.AST.Statements
 	}
 
 }
-

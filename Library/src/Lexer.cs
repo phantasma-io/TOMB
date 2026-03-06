@@ -52,7 +52,19 @@ namespace Phantasma.Tomb
 	{
 		public static readonly string AsmTag = ":ASM:";
 
-		public static Lexer Instance { get; private set; }
+		public static Lexer? Instance { get; private set; }
+		public static Lexer Active
+		{
+			get
+			{
+				if (Instance != null)
+				{
+					return Instance;
+				}
+
+				throw new InvalidOperationException("lexer instance not initialized");
+			}
+		}
 
 		public abstract string[] Keywords { get; }
 		public abstract string[] VarTypeNames { get; }
@@ -69,7 +81,7 @@ namespace Phantasma.Tomb
 
 		public string[] Operators => GetOperators();
 
-		private string[] _operators;
+		private string[]? _operators;
 
 		public Lexer()
 		{

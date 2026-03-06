@@ -58,14 +58,14 @@ public class ContractMethod
 
 	public static ContractMethod Unserialize(BinaryReader reader)
 	{
-		var name = reader.ReadVarString();
+		var name = reader.ReadVarString() ?? throw new InvalidDataException("method name is missing in ABI stream");
 		var returnType = (VMType)reader.ReadByte();
 		var offset = reader.ReadInt32();
 		var len = reader.ReadByte();
 		var parameters = new ContractParameter[len];
 		for (int i = 0; i < len; i++)
 		{
-			var pName = reader.ReadVarString();
+			var pName = reader.ReadVarString() ?? throw new InvalidDataException("method parameter name is missing in ABI stream");
 			var pVMType = (VMType)reader.ReadByte();
 			parameters[i] = new ContractParameter(pName, pVMType);
 		}

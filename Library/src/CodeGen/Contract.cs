@@ -15,11 +15,11 @@ namespace Phantasma.Tomb.CodeGen
 		public readonly Dictionary<string, EventDeclaration> Events = new Dictionary<string, EventDeclaration>();
 
 
-		public Contract(string name, ModuleKind kind, Module parent = null) : base(name, kind, parent)
+		public Contract(string name, ModuleKind kind, Module? parent = null) : base(name, kind, parent)
 		{
 		}
 
-		public override MethodDeclaration FindMethod(string name)
+		public override MethodDeclaration? FindMethod(string name)
 		{
 			if (Methods.ContainsKey(name))
 			{
@@ -145,7 +145,7 @@ namespace Phantasma.Tomb.CodeGen
 					{
 						method.Visit((x) =>
 						{
-							VarDeclaration decl = null;
+							VarDeclaration? decl = null;
 
 							if (x is VarExpression)
 							{

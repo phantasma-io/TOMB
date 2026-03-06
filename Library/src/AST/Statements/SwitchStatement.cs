@@ -7,8 +7,8 @@ namespace Phantasma.Tomb.AST.Statements
 {
 	public class SwitchStatement : Statement
 	{
-		public VarExpression variable;
-		public StatementBlock @default;
+		public VarExpression? variable;
+		public StatementBlock? @default;
 		public List<CaseStatement> cases = new List<CaseStatement>();
 		public Scope Scope { get; }
 
@@ -20,11 +20,21 @@ namespace Phantasma.Tomb.AST.Statements
 			//this.label = Parser.Instance.AllocateLabel();
 		}
 
+		private VarExpression RequireVariable()
+		{
+			if (variable != null)
+			{
+				return variable;
+			}
+
+			throw new CompilerException("switch variable not initialized");
+		}
+
 		public override void Visit(Action<Node> callback)
 		{
 			callback(this);
 
-			variable.Visit(callback);
+			RequireVariable().Visit(callback);
 			foreach (var entry in cases)
 			{
 				entry.Visit(callback);
@@ -53,7 +63,7 @@ namespace Phantasma.Tomb.AST.Statements
 
 		public override void GenerateCode(CodeGenerator output)
 		{
-			var reg = variable.GenerateCode(output);
+			Register? reg = RequireVariable().GenerateCode(output);
 			var endLabel = $"@end_case_{this.NodeID}";
 
 			this.Scope.Enter(output);
@@ -79,4 +89,3 @@ namespace Phantasma.Tomb.AST.Statements
 	}
 
 }
-

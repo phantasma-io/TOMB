@@ -20,7 +20,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 		{
 			DebugInfo debugInfo;
 			Dictionary<string, int> labels;
-			return BuildScript(lines, null, out debugInfo, out labels);
+			return BuildScript(lines, string.Empty, out debugInfo, out labels);
 		}
 
 		public static byte[] BuildScript(IEnumerable<string> lines, string fileName, out DebugInfo debugInfo, out Dictionary<string, int> labels)
@@ -68,13 +68,14 @@ namespace Phantasma.Business.CodeGen.Assembler
 				throw new Exception("Error assembling the script: " + e.ToString());
 			}
 
-			if (fileName != null)
+			if (!string.IsNullOrEmpty(fileName))
 			{
 				debugInfo = new DebugInfo(fileName, debugRanges);
 			}
 			else
 			{
-				debugInfo = null;
+				// Keep debug ranges even for unnamed scripts so callers never receive a null container.
+				debugInfo = new DebugInfo("<unknown>", debugRanges);
 			}
 
 			return script;

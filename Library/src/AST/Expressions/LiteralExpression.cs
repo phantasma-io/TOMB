@@ -32,7 +32,13 @@ namespace Phantasma.Tomb.AST.Expressions
 
 			if (this.type.Kind == VarKind.Module && typeof(T) == typeof(Module))
 			{
-				return (T)(object)Compiler.Instance.FindModule(this.value, true);
+				var module = Compiler.Instance.FindModule(this.value, true);
+				if (module == null)
+				{
+					throw new CompilerException("module not found: " + this.value);
+				}
+
+				return (T)(object)module;
 			}
 
 			return base.AsLiteral<T>();
@@ -48,7 +54,11 @@ namespace Phantasma.Tomb.AST.Expressions
 			{
 				case VarKind.Decimal:
 					{
-						var decType = this.type as DecimalVarType;
+						if (this.type is not DecimalVarType decType)
+						{
+							throw new CompilerException("decimal literal expected decimal type metadata");
+						}
+
 						decimal temp;
 
 						if (!decimal.TryParse(this.value, NumberStyles.Number, CultureInfo.InvariantCulture, out temp))

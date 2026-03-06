@@ -7,7 +7,7 @@ namespace Phantasma.Tomb
 	{
 		private static string FetchCurrentLine()
 		{
-			return Compiler.Instance != null ? Compiler.Instance.CurrentLine.ToString() : "???";
+			return Compiler.HasInstance ? Compiler.Instance.CurrentLine.ToString() : "???";
 		}
 
 		public CompilerException(string msg) : base($"line {FetchCurrentLine()}: {msg}")

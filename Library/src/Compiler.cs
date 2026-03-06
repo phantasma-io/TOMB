@@ -21,7 +21,7 @@ namespace Phantasma.Tomb
 
 	public class CompilerAttribute : Attribute
 	{
-		public string Extension { get; set; }
+		public string Extension { get; set; } = string.Empty;
 	}
 
 	public abstract class Compiler
@@ -34,9 +34,25 @@ namespace Phantasma.Tomb
 
 		public readonly int TargetProtocolVersion;
 
-		public Lexer Lexer { get; private set; }
+		private Lexer? _lexer;
+		public Lexer Lexer
+		{
+			get
+			{
+				if (_lexer != null)
+				{
+					return _lexer;
+				}
 
-		protected List<LexerToken> tokens;
+				throw new InvalidOperationException("lexer not initialized");
+			}
+			private set
+			{
+				_lexer = value;
+			}
+		}
+
+		protected List<LexerToken> tokens = new List<LexerToken>();
 		private int tokenIndex = 0;
 
 		private int currentLabel = 0;
@@ -44,9 +60,22 @@ namespace Phantasma.Tomb
 		public int CurrentLine { get; private set; }
 		public int CurrentColumn { get; private set; }
 
-		private string[] lines;
+		private string[] lines = Array.Empty<string>();
 
-		public static Compiler Instance { get; private set; }
+		private static Compiler? _instance;
+		public static bool HasInstance => _instance != null;
+		public static Compiler Instance
+		{
+			get
+			{
+				if (_instance != null)
+				{
+					return _instance;
+				}
+
+				throw new InvalidOperationException("compiler instance not initialized");
+			}
+		}
 
 		public static void EmitWarning(Node node, string warning)
 		{
@@ -63,7 +92,7 @@ namespace Phantasma.Tomb
 		public Compiler(int version = DomainSettings.LatestKnownProtocol)
 		{
 			TargetProtocolVersion = version;
-			Instance = this;
+			_instance = this;
 		}
 
 		public Module[] Process(string[] lines)
@@ -101,13 +130,13 @@ namespace Phantasma.Tomb
 			_modules.Add(module);
 		}
 
-		public Module FindModule(string name, bool mustBeCompiled)
+		public Module? FindModule(string name, bool mustBeCompiled)
 		{
 			foreach (var entry in _modules)
 			{
 				if (entry.Name == name)
 				{
-					if (mustBeCompiled && entry.script == null)
+					if (mustBeCompiled && !entry.IsCompiled)
 					{
 						return null;
 					}
@@ -120,10 +149,10 @@ namespace Phantasma.Tomb
 		}
 
 		private const int MaxRegisters = VirtualMachine.DefaultRegisterCount;
-		private Node[] registerAllocs = new Node[MaxRegisters];
-		private string[] registerAlias = new string[MaxRegisters];
+		private Node?[] registerAllocs = new Node?[MaxRegisters];
+		private string?[] registerAlias = new string?[MaxRegisters];
 
-		public Register AllocRegister(CodeGenerator generator, Node node, string alias = null)
+		public Register AllocRegister(CodeGenerator generator, Node node, string? alias = null)
 		{
 			if (alias != null)
 			{
@@ -159,7 +188,7 @@ namespace Phantasma.Tomb
 			throw new CompilerException("no more available registers");
 		}
 
-		public void DeallocRegister(ref Register register)
+		public void DeallocRegister(ref Register? register)
 		{
 			if (register == null)
 			{
@@ -170,8 +199,6 @@ namespace Phantasma.Tomb
 
 			if (registerAllocs[index] != null)
 			{
-				var alias = registerAlias[index];
-
 				//Console.WriteLine(CodeGenerator.Tabs(CodeGenerator.currentScope.Level) + "dealloc r" + index + " => "+alias);
 
 				registerAllocs[index] = null;
@@ -196,7 +223,7 @@ namespace Phantasma.Tomb
 			}
 		}
 
-		public LoopStatement CurrentLoop { get; private set; }
+		public LoopStatement? CurrentLoop { get; private set; }
 		private Stack<LoopStatement> _loops = new Stack<LoopStatement>();
 		public void PushLoop(LoopStatement loop)
 		{
@@ -254,7 +281,7 @@ namespace Phantasma.Tomb
 
 		protected abstract VarType ExpectType();
 
-		protected void ExpectToken(string val, string msg = null)
+		protected void ExpectToken(string val, string? msg = null)
 		{
 			var token = FetchToken();
 
@@ -394,11 +421,20 @@ namespace Phantasma.Tomb
 				if (arrayType == null)
 				{
 					var primitiveType = setCommand.variable.Type as PrimitiveVarType;
+					if (primitiveType == null)
+					{
+						throw new CompilerException($"variable {setCommand.variable.Name} cannot be indexed");
+					}
+
 					switch (primitiveType.Kind)
 					{
 						case VarKind.Storage_Map:
 							{
-								var mapDecl = targetVarDecl as MapDeclaration;
+								if (targetVarDecl is not MapDeclaration mapDecl)
+								{
+									throw new CompilerException($"variable {targetVarDecl.Name} is not a map");
+								}
+
 								var mapLib = scope.Module.FindLibrary("Map");
 								mapLib = mapLib.PatchMap(mapDecl);
 
@@ -517,11 +553,20 @@ namespace Phantasma.Tomb
 								if (arrayType == null)
 								{
 									var primitiveType = arrayVar.Type as PrimitiveVarType;
+									if (primitiveType == null)
+									{
+										throw new CompilerException($"variable {arrayVar.Name} cannot be indexed");
+									}
+
 									switch (primitiveType.Kind)
 									{
 										case VarKind.Storage_Map:
 											{
-												var mapDecl = arrayVar as MapDeclaration;
+												if (arrayVar is not MapDeclaration mapDecl)
+												{
+													throw new CompilerException($"variable {arrayVar.Name} is not a map");
+												}
+
 												var mapLib = scope.Module.FindLibrary("Map");
 												mapLib = mapLib.PatchMap(mapDecl);
 
@@ -572,7 +617,7 @@ namespace Phantasma.Tomb
 							var module = scope.Module.FindModule(first.value, true);
 							if (module != null)
 							{
-								return new LiteralExpression(scope, first.value, VarType.Find(VarKind.Module, method));
+								return new LiteralExpression(scope, first.value, VarType.Find(VarKind.Module, module));
 							}
 
 							throw new CompilerException("unknown identifier: " + first.value);
@@ -800,9 +845,9 @@ namespace Phantasma.Tomb
 					{
 						var varDecl = scope.FindVariable(first.value, false);
 
-						LibraryDeclaration libDecl;
+						LibraryDeclaration? libDecl = null;
 
-						Expression leftSide = null;
+						Expression? leftSide = null;
 
 						bool implicitIsLiteral = true;
 
@@ -900,6 +945,11 @@ namespace Phantasma.Tomb
 							leftSide = ParseMethodExpression(scope, libDecl, varDecl, implicitIsLiteral);
 						}
 
+						if (leftSide == null)
+						{
+							throw new CompilerException("selector expression failed to resolve");
+						}
+
 						second = FetchToken();
 						if (second.kind == TokenKind.Operator)
 						{
@@ -979,16 +1029,21 @@ namespace Phantasma.Tomb
 					break;
 			}
 
-			return null;
+			throw new CompilerException("unexpected end of expression parsing");
 		}
 
-		protected MethodCallExpression ParseMethodExpression(Scope scope, LibraryDeclaration library, VarDeclaration implicitArg = null, bool implicitAsLiteral = true)
+		protected MethodCallExpression ParseMethodExpression(Scope scope, LibraryDeclaration? library, VarDeclaration? implicitArg = null, bool implicitAsLiteral = true)
 		{
+			if (library == null)
+			{
+				throw new CompilerException("method call library not resolved");
+			}
+
 			var expr = new MethodCallExpression(scope);
 
 			string methodName;
 
-			if (library != null && library.Name == "Call")
+			if (library.Name == "Call")
 			{
 				var tmp = FetchToken();
 				methodName = tmp.value;
@@ -1118,7 +1173,7 @@ namespace Phantasma.Tomb
 
 					arg = Expression.AutoCast(arg, expectedType);
 
-					if (arg.ResultType != expectedType && expectedType.Kind != VarKind.Any)
+					if (!Expression.IsCompatibleType(arg.ResultType, expectedType))
 					{
 						throw new CompilerException($"expected argument of type {expectedType}, got {arg.ResultType} instead");
 					}
@@ -1144,11 +1199,11 @@ namespace Phantasma.Tomb
 			return expr;
 		}
 
-		protected Expression ParseVariableInitialization(Scope scope, ref VarType type)
+		protected Expression? ParseVariableInitialization(Scope scope, ref VarType? type)
 		{
 			var next = FetchToken();
 
-			Expression initExpr;
+			Expression? initExpr;
 			if (next.kind == TokenKind.Operator)
 			{
 				if (next.value == Lexer.AssignmentOperator)
@@ -1292,10 +1347,11 @@ namespace Phantasma.Tomb
 				throw new CompilerException("Invalid macro name: " + macroName);
 			}
 
-			_macros[macroName] = new Macro(value.ToString(), macroType);
+			var macroValue = value.ToString() ?? throw new CompilerException($"Invalid macro value for {macroName}");
+			_macros[macroName] = new Macro(macroValue, macroType);
 		}
 
-		public Macro ResolveMacro(string macroName)
+		public Macro? ResolveMacro(string macroName)
 		{
 			if (_macros.ContainsKey(macroName))
 			{

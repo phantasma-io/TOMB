@@ -45,12 +45,23 @@ namespace Phantasma.Business.CodeGen.Assembler
 			return this.Name;
 		}
 
+		private Opcode GetOpcodeOrThrow()
+		{
+			if (_opcode.HasValue)
+			{
+				return _opcode.Value;
+			}
+
+			throw new CompilerException(LineNumber, ERR_SYNTAX_ERROR);
+		}
+
 		public override void Process(ScriptBuilder sb)
 		{
 			// Opcode branch: direct VM opcode mapping.
 			if (_opcode != null)
 			{
-				switch (_opcode.Value)
+				var opcode = GetOpcodeOrThrow();
+				switch (opcode)
 				{
 					//1 reg
 					case Opcode.PUSH:
@@ -219,7 +230,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 				throw new CompilerException(LineNumber, ERR_INVALID_ARGUMENT);
 			}
 
-			sb.Emit(this._opcode.Value, new byte[] { dest_reg });
+			sb.Emit(GetOpcodeOrThrow(), new byte[] { dest_reg });
 		}
 
 		private void ProcessCtx(ScriptBuilder sb)
@@ -233,7 +244,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 				if (Arguments[1].IsRegister())
 				{
 					var src_reg = Arguments[1].AsRegister();
-					sb.Emit(this._opcode.Value, new byte[] { dest_reg, src_reg });
+					sb.Emit(GetOpcodeOrThrow(), new byte[] { dest_reg, src_reg });
 				}
 				else
 				{
@@ -255,7 +266,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 				var dest_reg = Arguments[1].AsRegister();
 				var length = (int)Arguments[2].AsNumber();
 
-				sb.Emit(this._opcode.Value, new byte[]
+				sb.Emit(GetOpcodeOrThrow(), new byte[]
 				{
 						src_reg,
 						dest_reg
@@ -276,7 +287,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 			{
 				var reg = Arguments[0].AsRegister();
 				var label = Arguments[1].AsLabel();
-				sb.EmitConditionalJump(this._opcode.Value, reg, label);
+				sb.EmitConditionalJump(GetOpcodeOrThrow(), reg, label);
 			}
 			else
 			{
@@ -370,7 +381,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 			if (Arguments[0].IsRegister())
 			{
 				var reg = Arguments[0].AsRegister();
-				sb.Emit(this._opcode.Value, new[]
+				sb.Emit(GetOpcodeOrThrow(), new[]
 				{
 					reg
 				});
@@ -392,7 +403,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 			{
 				var src = Arguments[0].AsRegister();
 				var dest = Arguments[1].AsRegister();
-				sb.Emit(this._opcode.Value, new[] { src, dest });
+				sb.Emit(GetOpcodeOrThrow(), new[] { src, dest });
 			}
 			else
 			{
@@ -412,8 +423,8 @@ namespace Phantasma.Business.CodeGen.Assembler
 				var src_a_reg = Arguments[0].AsRegister();
 				var src_b_reg = Arguments[1].AsRegister();
 
-				sb.Emit(this._opcode.Value, new[]
-				{
+				sb.Emit(GetOpcodeOrThrow(), new[]
+			{
 					src_a_reg,
 					src_b_reg,
 					src_a_reg
@@ -425,8 +436,8 @@ namespace Phantasma.Business.CodeGen.Assembler
 				var src_b_reg = Arguments[1].AsRegister();
 				var src_c_reg = Arguments[2].AsRegister();
 
-				sb.Emit(this._opcode.Value, new[]
-				{
+				sb.Emit(GetOpcodeOrThrow(), new[]
+			{
 					src_a_reg,
 					src_b_reg,
 					src_c_reg
@@ -583,7 +594,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 		{
 			if (Arguments.Length == 0)
 			{
-				sb.Emit(this._opcode.Value);
+				sb.Emit(GetOpcodeOrThrow());
 			}
 			else if (Arguments.Length == 1)
 			{
@@ -591,7 +602,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 				{
 					var reg = Arguments[0].AsRegister();
 					sb.EmitPush(reg);
-					sb.Emit(this._opcode.Value);
+					sb.Emit(GetOpcodeOrThrow());
 				}
 				else
 				{

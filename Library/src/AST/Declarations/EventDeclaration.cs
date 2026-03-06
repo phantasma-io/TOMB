@@ -188,7 +188,11 @@ namespace Phantasma.Tomb.AST.Declarations
 				case VarKind.Struct:
 					var fields = new Dictionary<VMObject, VMObject>();
 
-					var structInfo = type as StructVarType;
+					if (type is not StructVarType structInfo || structInfo.decl == null)
+					{
+						throw new CompilerException("struct event parameter metadata not initialized");
+					}
+
 					foreach (var field in structInfo.decl.fields)
 					{
 						fields[VMObject.FromObject(field.name)] = GenerateTestObject(field.type);

@@ -10,16 +10,26 @@ namespace Phantasma.Tomb.AST.Expressions
 {
 	public class MethodCallExpression : Expression
 	{
-		public MethodInterface method;
+		public MethodInterface? method;
 		public List<Expression> arguments = new List<Expression>();
 
 		public List<VarType> generics = new List<VarType>();
 
-		public override VarType ResultType => method.ReturnType;
+		public override VarType ResultType => RequireMethod().ReturnType;
 
 		public MethodCallExpression(Scope parentScope) : base(parentScope)
 		{
 
+		}
+
+		private MethodInterface RequireMethod()
+		{
+			if (method != null)
+			{
+				return method;
+			}
+
+			throw new CompilerException("method call target not initialized");
 		}
 
 		public override void Visit(Action<Node> callback)
@@ -54,12 +64,14 @@ namespace Phantasma.Tomb.AST.Expressions
 		{
 			int requiredGenerics = 0;
 
-			this.method = this.method.Clone(this.method.Library);
+			var currentMethod = RequireMethod();
+			var targetMethod = currentMethod.Clone(currentMethod.Library);
+			this.method = targetMethod;
 
 			// auto patch storage methods
 			if (this.generics.Count == 0)
 			{
-				var genericLib = this.method.Library as GenericLibraryDeclaration;
+				var genericLib = targetMethod.Library as GenericLibraryDeclaration;
 				if (genericLib != null)
 				{
 					foreach (var type in genericLib.Generics)
@@ -75,60 +87,62 @@ namespace Phantasma.Tomb.AST.Expressions
 
 				if (generic.index < 0)
 				{
-					throw new CompilerException($"weird generic index for return type of method {this.method.Name}, compiler bug?");
+					throw new CompilerException($"weird generic index for return type of method {targetMethod.Name}, compiler bug?");
 				}
 
 				if (generic.index >= this.generics.Count)
 				{
-					throw new CompilerException($"missing generic declaration with index {generic.index} when calling method {this.method.Name}");
+					throw new CompilerException($"missing generic declaration with index {generic.index} when calling method {targetMethod.Name}");
 				}
 
 				requiredGenerics = Math.Max(requiredGenerics, generic.index + 1);
 
-				this.method.ReturnType = this.generics[generic.index];
+				targetMethod.ReturnType = this.generics[generic.index];
 			}
 
-			for (int paramIndex = 0; paramIndex < this.method.Parameters.Length; paramIndex++)
+			for (int paramIndex = 0; paramIndex < targetMethod.Parameters.Length; paramIndex++)
 			{
-				var parameter = this.method.Parameters[paramIndex];
+				var parameter = targetMethod.Parameters[paramIndex];
 				if (parameter.Type.Kind == VarKind.Generic)
 				{
 					var generic = (GenericVarType)parameter.Type;
 
 					if (generic.index < 0)
 					{
-						throw new CompilerException($"weird generic index for parameter {parameter.Name} of method {this.method.Name}, compiler bug?");
+						throw new CompilerException($"weird generic index for parameter {parameter.Name} of method {targetMethod.Name}, compiler bug?");
 					}
 
 					if (generic.index >= this.generics.Count)
 					{
-						throw new CompilerException($"missing generic declaration with index {generic.index} when calling method {this.method.Name}");
+						throw new CompilerException($"missing generic declaration with index {generic.index} when calling method {targetMethod.Name}");
 					}
 
 					requiredGenerics = Math.Max(requiredGenerics, generic.index + 1);
 
-					this.method.Parameters[paramIndex] = new MethodParameter(parameter.Name, this.generics[generic.index]);
+					targetMethod.Parameters[paramIndex] = new MethodParameter(parameter.Name, this.generics[generic.index]);
 				}
 			}
 
 
 			if (requiredGenerics > generics.Count)
 			{
-				throw new CompilerException($"call to method {this.method.Name} expected {requiredGenerics} generics, got {generics.Count} instead");
+				throw new CompilerException($"call to method {targetMethod.Name} expected {requiredGenerics} generics, got {generics.Count} instead");
 			}
 		}
 
 		public override Register GenerateCode(CodeGenerator output)
 		{
+			var targetMethod = RequireMethod();
+
 			// Validate native-contract availability before emitting call opcodes so the
 			// failure mode is explicit at compile time instead of surfacing only at runtime.
-			NativeMethodAvailability.ValidateOrReport(this, method, Compiler.NativeCheckMode);
+			NativeMethodAvailability.ValidateOrReport(this, targetMethod, Compiler.NativeCheckMode);
 
-			Register reg;
+			Register? reg;
 
-			if (this.method.PreCallback != null)
+			if (targetMethod.PreCallback != null)
 			{
-				reg = this.method.PreCallback(output, ParentScope, this);
+				reg = targetMethod.PreCallback(output, ParentScope, this);
 			}
 			else
 			{
@@ -136,21 +150,21 @@ namespace Phantasma.Tomb.AST.Expressions
 			}
 
 			bool isDynamicContractGateway =
-				(method.Library.Name == "Call" && method.Name == "contract") ||
-				(method.Library.Name == "Contract" && method.Name == "call");
+				(targetMethod.Library.Name == "Call" && targetMethod.Name == "contract") ||
+				(targetMethod.Library.Name == "Contract" && targetMethod.Name == "call");
 
-			bool isCallLibrary = method.Library.Name == "Call";
+			bool isCallLibrary = targetMethod.Library.Name == "Call";
 			bool usesDynamicTargetLiteral = isCallLibrary || isDynamicContractGateway;
 
-			string customAlias = null;
+			string? customAlias = null;
 
-			if (method.Implementation != MethodImplementationType.Custom)
+			if (targetMethod.Implementation != MethodImplementationType.Custom)
 			{
 				for (int i = arguments.Count - 1; i >= 0; i--)
 				{
 					var arg = arguments[i];
 
-					Register argReg;
+					Register? argReg;
 
 					if (usesDynamicTargetLiteral)
 					{
@@ -166,7 +180,7 @@ namespace Phantasma.Tomb.AST.Expressions
 					}
 					else
 					{
-						var parameter = this.method.Parameters[i];
+						var parameter = targetMethod.Parameters[i];
 						if (parameter.Callback != null)
 						{
 							argReg = parameter.Callback(output, ParentScope, arg);
@@ -185,25 +199,25 @@ namespace Phantasma.Tomb.AST.Expressions
 				}
 			}
 
-			switch (this.method.Implementation)
+			switch (targetMethod.Implementation)
 			{
 				case MethodImplementationType.LocalCall:
 					{
-						if (this.method.IsBuiltin)
+						if (targetMethod.IsBuiltin)
 						{
-							output.AppendLine(this, $"CALL @entry_{this.method.Alias}");
-							output.IncBuiltinReference(this.method.Alias);
+							output.AppendLine(this, $"CALL @entry_{targetMethod.Alias}");
+							output.IncBuiltinReference(targetMethod.Alias);
 						}
 						else
 						{
-							output.AppendLine(this, $"CALL @entry_{this.method.Name}");
+							output.AppendLine(this, $"CALL @entry_{targetMethod.Name}");
 						}
 						break;
 					}
 
 				case MethodImplementationType.ExtCall:
 					{
-						var extCall = customAlias != null ? customAlias : $"\"{this.method.Alias}\"";
+						var extCall = customAlias != null ? customAlias : $"\"{targetMethod.Alias}\"";
 						output.AppendLine(this, $"LOAD {reg} {extCall}");
 						output.AppendLine(this, $"EXTCALL {reg}");
 						break;
@@ -213,11 +227,11 @@ namespace Phantasma.Tomb.AST.Expressions
 					{
 						if (customAlias == null)
 						{
-							output.AppendLine(this, $"LOAD {reg} \"{this.method.Alias}\"");
+							output.AppendLine(this, $"LOAD {reg} \"{targetMethod.Alias}\"");
 							output.AppendLine(this, $"PUSH {reg}");
 						}
 
-						var contractCall = customAlias != null ? customAlias : $"\"{this.method.Contract}\"";
+						var contractCall = customAlias != null ? customAlias : $"\"{targetMethod.Contract}\"";
 						output.AppendLine(this, $"LOAD {reg} {contractCall}");
 						output.AppendLine(this, $"CTX {reg} {reg}");
 						output.AppendLine(this, $"SWITCH {reg}");
@@ -226,33 +240,33 @@ namespace Phantasma.Tomb.AST.Expressions
 
 				case MethodImplementationType.Custom:
 
-					if (this.method.PreCallback == null && this.method.PostCallback == null)
+					if (targetMethod.PreCallback == null && targetMethod.PostCallback == null)
 					{
-						output.AppendLine(this, $"LOAD r0 \"{this.method.Library.Name}.{this.method.Name} not implemented\"");
+						output.AppendLine(this, $"LOAD r0 \"{targetMethod.Library.Name}.{targetMethod.Name} not implemented\"");
 						output.AppendLine(this, $"THROW r0");
 					}
 
 					break;
 			}
 
-			if (this.method.ReturnType.Kind != VarKind.None && this.method.Implementation != MethodImplementationType.Custom)
+			if (targetMethod.ReturnType.Kind != VarKind.None && targetMethod.Implementation != MethodImplementationType.Custom)
 			{
 				output.AppendLine(this, $"POP {reg}");
 			}
 
-			if (this.method.PostCallback != null)
+			if (targetMethod.PostCallback != null)
 			{
-				reg = this.method.PostCallback(output, ParentScope, this, reg);
+				reg = targetMethod.PostCallback(output, ParentScope, this, reg);
 			}
 
-			return reg;
+			return reg ?? throw new CompilerException("method call register allocation failed");
 		}
 
 		public override string ToString()
 		{
 			var sb = new StringBuilder();
 
-			sb.Append(method.Name);
+			sb.Append(RequireMethod().Name);
 			sb.Append('(');
 
 			int count = 0;

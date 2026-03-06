@@ -8,7 +8,7 @@ namespace Phantasma.Tomb.AST.Declarations
 	{
 		public VarType Type;
 		public VarStorage Storage;
-		public Register Register = null;
+		public Register? Register;
 
 		public VarDeclaration(Scope parentScope, string name, VarType type, VarStorage storage) : base(parentScope, name)
 		{

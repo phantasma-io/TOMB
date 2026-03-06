@@ -24,7 +24,7 @@ public class ContractEvent
 	public static ContractEvent Unserialize(BinaryReader reader)
 	{
 		var value = reader.ReadByte();
-		var name = reader.ReadVarString();
+		var name = reader.ReadVarString() ?? throw new InvalidDataException("event name is missing in ABI stream");
 		var returnType = (VMType)reader.ReadByte();
 		var description = reader.ReadByteArray();
 		return new ContractEvent(value, name, returnType, description);

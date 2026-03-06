@@ -9,7 +9,7 @@ namespace Phantasma.Tomb.CodeGen
 		private StringBuilder _sb = new StringBuilder();
 		private StringBuilder _includedBuiltinCodeBuffer = new StringBuilder(); // used for builtins
 
-		public static Scope currentScope = null;
+		public static Scope? currentScope;
 		public static int currentSourceLine = 0;
 
 		public int LineCount;
@@ -43,7 +43,13 @@ namespace Phantasma.Tomb.CodeGen
 				currentSourceLine++;
 			}
 
-			line = Tabs(currentScope.Level) + line;
+			var scope = currentScope;
+			if (scope == null)
+			{
+				throw new CompilerException("scope not initialized for code generation");
+			}
+
+			line = Tabs(scope.Level) + line;
 			_sb.AppendLine(line);
 			LineCount++;
 		}

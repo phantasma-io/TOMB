@@ -6,11 +6,11 @@ namespace Phantasma.Tomb.AST
 {
 	public sealed class Scope
 	{
-		public readonly Scope Parent;
+		public readonly Scope? Parent;
 		public readonly Module Module;
 		public readonly string Name;
 
-		public MethodDeclaration Method; // optional
+		public MethodDeclaration? Method; // optional
 
 		public int Level
 		{
@@ -45,9 +45,7 @@ namespace Phantasma.Tomb.AST
 
 		public Scope(Module module)
 		{
-			this.Parent = null;
 			this.Module = module;
-			this.Method = null;
 			this.Name = module.Name;
 		}
 
@@ -95,7 +93,18 @@ namespace Phantasma.Tomb.AST
 			Constants[decl.Name] = decl;
 		}
 
-		public VarDeclaration FindVariable(string name, bool required = true)
+		public VarDeclaration FindVariable(string name)
+		{
+			var result = FindVariable(name, required: false);
+			if (result != null)
+			{
+				return result;
+			}
+
+			throw new CompilerException("variable not declared: " + name);
+		}
+
+		public VarDeclaration? FindVariable(string name, bool required)
 		{
 			if (Variables.ContainsKey(name))
 			{
@@ -115,7 +124,18 @@ namespace Phantasma.Tomb.AST
 			return null;
 		}
 
-		public ConstDeclaration FindConstant(string name, bool required = true)
+		public ConstDeclaration FindConstant(string name)
+		{
+			var result = FindConstant(name, required: false);
+			if (result != null)
+			{
+				return result;
+			}
+
+			throw new CompilerException("constant not declared: " + name);
+		}
+
+		public ConstDeclaration? FindConstant(string name, bool required)
 		{
 			if (Constants.ContainsKey(name))
 			{
@@ -135,7 +155,7 @@ namespace Phantasma.Tomb.AST
 			return null;
 		}
 
-		private Scope previousScope;
+		private Scope? previousScope;
 
 		public void Enter(CodeGenerator output)
 		{

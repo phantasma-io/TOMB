@@ -15,8 +15,12 @@ namespace Phantasma.Tomb.AST.Expressions
 		public StructFieldExpression(Scope parentScope, VarDeclaration varDecl, string fieldName) : base(parentScope)
 		{
 			var structInfo = ((StructVarType)varDecl.Type);
+			if (structInfo.decl == null)
+			{
+				throw new CompilerException($"Struct metadata not initialized for {varDecl.Type}");
+			}
 
-			VarType fieldType = null;
+			VarType? fieldType = null;
 
 			foreach (var field in structInfo.decl.fields)
 			{

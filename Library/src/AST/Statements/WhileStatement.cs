@@ -5,8 +5,8 @@ namespace Phantasma.Tomb.AST.Statements
 {
 	public class WhileStatement : LoopStatement
 	{
-		public Expression condition;
-		public StatementBlock body;
+		public Expression? condition;
+		public StatementBlock? body;
 		public Scope Scope { get; }
 
 		//private int label;
@@ -17,17 +17,37 @@ namespace Phantasma.Tomb.AST.Statements
 			//this.label = Parser.Instance.AllocateLabel();
 		}
 
+		private Expression RequireCondition()
+		{
+			if (condition != null)
+			{
+				return condition;
+			}
+
+			throw new CompilerException("while-loop condition not initialized");
+		}
+
+		private StatementBlock RequireBody()
+		{
+			if (body != null)
+			{
+				return body;
+			}
+
+			throw new CompilerException("while-loop body not initialized");
+		}
+
 		public override void Visit(Action<Node> callback)
 		{
 			callback(this);
 
-			condition.Visit(callback);
-			body.Visit(callback);
+			RequireCondition().Visit(callback);
+			RequireBody().Visit(callback);
 		}
 
 		public override bool IsNodeUsed(Node node)
 		{
-			return (node == this) || condition.IsNodeUsed(node) || body.IsNodeUsed(node);
+			return (node == this) || RequireCondition().IsNodeUsed(node) || RequireBody().IsNodeUsed(node);
 		}
 
 		public override void GenerateCode(CodeGenerator output)
@@ -36,12 +56,14 @@ namespace Phantasma.Tomb.AST.Statements
 
 			output.AppendLine(this, $"@loop_start_{this.NodeID}: NOP");
 
-			var reg = condition.GenerateCode(output);
+			var whileCondition = RequireCondition();
+			var whileBody = RequireBody();
+			Register? reg = whileCondition.GenerateCode(output);
 
 			this.Scope.Enter(output);
 
 			output.AppendLine(this, $"JMPNOT {reg} @loop_end_{this.NodeID}");
-			body.GenerateCode(output);
+			whileBody.GenerateCode(output);
 
 			output.AppendLine(this, $"JMP @loop_start_{this.NodeID}");
 			output.AppendLine(this, $"@loop_end_{this.NodeID}: NOP");
@@ -54,4 +76,3 @@ namespace Phantasma.Tomb.AST.Statements
 	}
 
 }
-

@@ -73,7 +73,7 @@ namespace Phantasma.Tomb.Compilers
 			{
 				var firstToken = FetchToken();
 
-				Module module;
+				Module? module;
 
 				switch (firstToken.value)
 				{
@@ -232,7 +232,7 @@ namespace Phantasma.Tomb.Compilers
 			}
 		}
 
-		private ConstDeclaration ParseConstant(Scope scope)
+		private ConstDeclaration ParseConstant(Scope? scope)
 		{
 			var constName = ExpectIdentifier();
 			ExpectToken(":");
@@ -270,7 +270,7 @@ namespace Phantasma.Tomb.Compilers
 		private void ParseModule(Module module)
 		{
 			var structLibName = "Struct";
-			module.Libraries[structLibName] = Module.LoadLibrary(structLibName, null, ModuleKind.Script);
+			module.Libraries[structLibName] = Module.LoadLibrary(structLibName, module.Scope, ModuleKind.Script);
 			var structLib = module.FindLibrary(structLibName);
 
 			foreach (var structInfo in _structs.Values)
@@ -459,7 +459,7 @@ namespace Phantasma.Tomb.Compilers
 								}
 
 								var temp = FetchToken();
-								byte[] description;
+								byte[] description = Array.Empty<byte>();
 								switch (temp.kind)
 								{
 									case TokenKind.String:
@@ -467,7 +467,7 @@ namespace Phantasma.Tomb.Compilers
 										break;
 
 									case TokenKind.Bytes:
-										description = Base16.Decode(temp.value);
+										description = Base16.Decode(temp.value) ?? throw new CompilerException($"invalid event description bytes: {temp.value}");
 										break;
 
 									case TokenKind.Identifier:
@@ -475,13 +475,18 @@ namespace Phantasma.Tomb.Compilers
 											var descModule = FindModule(temp.value, true) as Script;
 											if (descModule != null)
 											{
+												if (descModule.Parameters == null || descModule.Parameters.Length < 2)
+												{
+													throw new CompilerException($"description module has invalid parameter shape: {temp.value}");
+												}
+
 												var descSecondType = descModule.Parameters[1].Type;
 												if (descSecondType != eventType)
 												{
 													throw new CompilerException($"descriptions second parameter has type {descSecondType}, does not match event type: {eventType}");
 												}
 
-												if (descModule.script != null)
+												if (descModule.IsCompiled)
 												{
 													description = descModule.script;
 												}
@@ -1023,7 +1028,7 @@ namespace Phantasma.Tomb.Compilers
 							var temp = FetchToken();
 							Rewind();
 
-							Expression expr;
+							Expression? expr;
 							if (temp.value != ";")
 							{
 								expr = ExpectExpression(scope);
@@ -1071,7 +1076,7 @@ namespace Phantasma.Tomb.Compilers
 
 					case "local":
 						{
-							AssignStatement initCmd;
+							AssignStatement? initCmd;
 							ParseVariableDeclaration(scope, out initCmd);
 							if (initCmd != null)
 							{
@@ -1205,7 +1210,7 @@ namespace Phantasma.Tomb.Compilers
 							var forCommand = new ForStatement(scope);
 							var forScope = forCommand.Scope;
 
-							AssignStatement initCmd;
+							AssignStatement? initCmd;
 							// Loop variable and all loop expressions belong to the dedicated for-scope.
 							// This prevents leaking "local i" into parent scope after the loop.
 							forCommand.loopVar = ParseVariableDeclaration(forScope, out initCmd, mustExist);
@@ -1354,7 +1359,7 @@ namespace Phantasma.Tomb.Compilers
 								var varDecl = scope.FindVariable(token.value, false);
 								bool isStructField = false;
 
-								LibraryDeclaration libDecl;
+								LibraryDeclaration? libDecl = null;
 
 								if (varDecl != null)
 								{
@@ -1403,6 +1408,11 @@ namespace Phantasma.Tomb.Compilers
 
 								if (isStructField)
 								{
+									if (varDecl == null)
+									{
+										throw new CompilerException("struct field assignment target was not resolved");
+									}
+
 									var fieldName = ExpectIdentifier();
 
 									next = FetchToken();
@@ -1417,6 +1427,10 @@ namespace Phantasma.Tomb.Compilers
 
 										var structDecl = _structs[structName];
 										var fieldDecl = structDecl.fields.FirstOrDefault(x => x.name == fieldName);
+										if (fieldDecl.type == null)
+										{
+											throw new CompilerException($"struct {structName} does not contain field {fieldName}");
+										}
 
 										var assignment = new AssignStatement();
 										assignment.variable = varDecl;
@@ -1479,12 +1493,12 @@ namespace Phantasma.Tomb.Compilers
 			}
 		}
 
-		private VarDeclaration ParseVariableDeclaration(Scope scope, out AssignStatement assignment, bool mustExist = false)
+		private VarDeclaration ParseVariableDeclaration(Scope scope, out AssignStatement? assignment, bool mustExist = false)
 		{
 			var varName = ExpectIdentifier();
 
 			var tmp = FetchToken();
-			VarType type = null;
+			VarType? type = null;
 
 			if (tmp.value == ":")
 			{
@@ -1495,7 +1509,12 @@ namespace Phantasma.Tomb.Compilers
 				Rewind();
 			}
 
-			Expression initExpr = ParseVariableInitialization(scope, ref type);
+			Expression? initExpr = ParseVariableInitialization(scope, ref type);
+
+			if (type == null)
+			{
+				throw new CompilerException($"Could not resolve variable type for {varName}");
+			}
 
 			VarDeclaration varDecl;
 

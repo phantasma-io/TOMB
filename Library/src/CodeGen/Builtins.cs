@@ -50,7 +50,7 @@ namespace Phantasma.Tomb.CodeGen
 
 	public static class Builtins
 	{
-		private static Dictionary<string, BuiltinInfo> _builtins = null;
+		private static Dictionary<string, BuiltinInfo>? _builtins;
 
 		public static void FillLibrary(LibraryDeclaration libDecl)
 		{
@@ -59,7 +59,8 @@ namespace Phantasma.Tomb.CodeGen
 				Initialize();
 			}
 
-			foreach (var entry in _builtins.Values)
+			var builtins = _builtins ?? throw new CompilerException("builtins not initialized");
+			foreach (var entry in builtins.Values)
 			{
 				if (entry.LibraryName.Equals(libDecl.Name, StringComparison.OrdinalIgnoreCase))
 				{

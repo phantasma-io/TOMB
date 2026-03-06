@@ -6,12 +6,12 @@ namespace Phantasma.Tomb.AST.Statements
 {
 	public class ForStatement : LoopStatement
 	{
-		public VarDeclaration loopVar;
-		public Expression condition;
-		public Statement initStatement;
-		public Statement loopStatement;
+		public VarDeclaration? loopVar;
+		public Expression? condition;
+		public Statement? initStatement;
+		public Statement? loopStatement;
 
-		public StatementBlock body;
+		public StatementBlock? body;
 		public Scope Scope { get; }
 
 		//private int label;
@@ -22,37 +22,98 @@ namespace Phantasma.Tomb.AST.Statements
 			//this.label = Parser.Instance.AllocateLabel();
 		}
 
+		private VarDeclaration RequireLoopVar()
+		{
+			if (loopVar != null)
+			{
+				return loopVar;
+			}
+
+			throw new CompilerException("for-loop variable not initialized");
+		}
+
+		private Expression RequireCondition()
+		{
+			if (condition != null)
+			{
+				return condition;
+			}
+
+			throw new CompilerException("for-loop condition not initialized");
+		}
+
+		private Statement RequireInitStatement()
+		{
+			if (initStatement != null)
+			{
+				return initStatement;
+			}
+
+			throw new CompilerException("for-loop init statement not initialized");
+		}
+
+		private Statement RequireLoopStatement()
+		{
+			if (loopStatement != null)
+			{
+				return loopStatement;
+			}
+
+			throw new CompilerException("for-loop iteration statement not initialized");
+		}
+
+		private StatementBlock RequireBody()
+		{
+			if (body != null)
+			{
+				return body;
+			}
+
+			throw new CompilerException("for-loop body not initialized");
+		}
+
 		public override void Visit(Action<Node> callback)
 		{
 			callback(this);
 
-			loopVar.Visit(callback);
-			initStatement.Visit(callback);
-			condition.Visit(callback);
-			loopStatement.Visit(callback);
-			body.Visit(callback);
+			RequireLoopVar().Visit(callback);
+			RequireInitStatement().Visit(callback);
+			RequireCondition().Visit(callback);
+			RequireLoopStatement().Visit(callback);
+			RequireBody().Visit(callback);
 		}
 
 		public override bool IsNodeUsed(Node node)
 		{
-			return (node == this) || condition.IsNodeUsed(node) || body.IsNodeUsed(node) || loopVar.IsNodeUsed(node) || loopStatement.IsNodeUsed(node) || initStatement.IsNodeUsed(node);
+			return
+				(node == this) ||
+				RequireCondition().IsNodeUsed(node) ||
+				RequireBody().IsNodeUsed(node) ||
+				RequireLoopVar().IsNodeUsed(node) ||
+				RequireLoopStatement().IsNodeUsed(node) ||
+				RequireInitStatement().IsNodeUsed(node);
 		}
 
 		public override void GenerateCode(CodeGenerator output)
 		{
-			initStatement.GenerateCode(output);
+			var forCondition = RequireCondition();
+			var forBody = RequireBody();
+			var init = RequireInitStatement();
+			var loop = RequireLoopStatement();
+
+			init.GenerateCode(output);
 
 			Compiler.Instance.PushLoop(this);
 
 			output.AppendLine(this, $"@loop_start_{this.NodeID}: NOP");
 
-			var reg = condition.GenerateCode(output);
+			Register? reg = forCondition.GenerateCode(output);
 
 			this.Scope.Enter(output);
 
 			output.AppendLine(this, $"JMPNOT {reg} @loop_end_{this.NodeID}");
-			body.GenerateCode(output);
-			loopStatement.GenerateCode(output);
+			forBody.GenerateCode(output);
+			loop.GenerateCode(output);
 
 			output.AppendLine(this, $"JMP @loop_start_{this.NodeID}");
 			output.AppendLine(this, $"@loop_end_{this.NodeID}: NOP");
@@ -65,4 +126,3 @@ namespace Phantasma.Tomb.AST.Statements
 	}
 
 }
-

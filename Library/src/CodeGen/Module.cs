@@ -30,7 +30,7 @@ namespace Phantasma.Tomb.CodeGen
 		public readonly ModuleKind Kind;
 		public Scope Scope { get; }
 
-		public readonly Module Parent;
+		public readonly Module? Parent;
 
 		public readonly Dictionary<string, LibraryDeclaration> Libraries = new Dictionary<string, LibraryDeclaration>();
 
@@ -38,15 +38,85 @@ namespace Phantasma.Tomb.CodeGen
 		public readonly LibraryDeclaration library;
 
 		// only available after compilation
-		public byte[] script { get; private set; }
-		public string asm { get; private set; }
-		public ContractInterface abi { get; private set; }
-		public DebugInfo debugInfo { get; private set; }
+		private byte[]? _script;
+		private string? _asm;
+		private ContractInterface? _abi;
+		private DebugInfo? _debugInfo;
+
+		public bool IsCompiled => _script != null;
+
+		public byte[] script
+		{
+			get
+			{
+				if (_script != null)
+				{
+					return _script;
+				}
+
+				throw new CompilerException($"module script not generated yet: {Name}");
+			}
+			private set
+			{
+				_script = value;
+			}
+		}
+
+		public string asm
+		{
+			get
+			{
+				if (_asm != null)
+				{
+					return _asm;
+				}
+
+				throw new CompilerException($"module asm not generated yet: {Name}");
+			}
+			private set
+			{
+				_asm = value;
+			}
+		}
+
+		public ContractInterface abi
+		{
+			get
+			{
+				if (_abi != null)
+				{
+					return _abi;
+				}
+
+				throw new CompilerException($"module ABI not generated yet: {Name}");
+			}
+			private set
+			{
+				_abi = value;
+			}
+		}
+
+		public DebugInfo debugInfo
+		{
+			get
+			{
+				if (_debugInfo != null)
+				{
+					return _debugInfo;
+				}
+
+				throw new CompilerException($"module debug-info not generated yet: {Name}");
+			}
+			private set
+			{
+				_debugInfo = value;
+			}
+		}
 
 		private List<Module> _subModules = new List<Module>();
 		public IEnumerable<Module> SubModules => _subModules;
 
-		public Module(string name, ModuleKind kind, Module parent = null)
+		public Module(string name, ModuleKind kind, Module? parent = null)
 		{
 			this.Name = name;
 			this.Kind = kind;
@@ -61,14 +131,14 @@ namespace Phantasma.Tomb.CodeGen
 			ImportLibrary("Enum");
 		}
 
-		public abstract MethodDeclaration FindMethod(string name);
+		public abstract MethodDeclaration? FindMethod(string name);
 
 		public void AddSubModule(Module subModule)
 		{
 			_subModules.Add(subModule);
 		}
 
-		public Module FindModule(string name, bool mustBeCompiled)
+		public Module? FindModule(string name, bool mustBeCompiled)
 		{
 			foreach (var module in _subModules)
 			{
@@ -81,7 +151,18 @@ namespace Phantasma.Tomb.CodeGen
 			return Compiler.Instance.FindModule(name, mustBeCompiled);
 		}
 
-		public LibraryDeclaration FindLibrary(string name, bool required = true)
+		public LibraryDeclaration FindLibrary(string name)
+		{
+			var result = FindLibrary(name, required: false);
+			if (result != null)
+			{
+				return result;
+			}
+
+			throw new CompilerException("possibly unimported library: " + name);
+		}
+
+		public LibraryDeclaration? FindLibrary(string name, bool required)
 		{
 			if (name != name.UppercaseFirst() && name != "this")
 			{
@@ -164,13 +245,15 @@ namespace Phantasma.Tomb.CodeGen
 			}
 
 			var module = scope.Module.FindModule(literal.value, true);
-
-			var abi = module.abi;
+			if (module == null)
+			{
+				throw new CompilerException($"module not found: {literal.value}");
+			}
 
 			if (module.Kind == ModuleKind.NFT)
 			{
 				var nftStandard = TokenUtils.GetNFTStandard();
-				if (!abi.Implements(nftStandard))
+				if (!module.abi.Implements(nftStandard))
 				{
 					throw new CompilerException($"nft {literal.value} not does implement NFT standard");
 				}
@@ -201,7 +284,8 @@ namespace Phantasma.Tomb.CodeGen
 		{
 			if (method.ResultType.IsWeird)
 			{
-				throw new CompilerException($"possible compiler bug detected on call to method {method.method.Name}");
+				var methodName = method.method?.Name ?? "<unknown>";
+				throw new CompilerException($"possible compiler bug detected on call to method {methodName}");
 			}
 
 			switch (method.ResultType.Kind)
@@ -240,9 +324,10 @@ namespace Phantasma.Tomb.CodeGen
 
 			Compiler.Instance.VerifyRegisters();
 
-			asm = codeGen.ToString();
+			var asmText = codeGen.ToString();
+			asm = asmText;
 
-			var lines = asm.Split('\n');
+			var lines = asmText.Split('\n');
 			DebugInfo temp;
 			Dictionary<string, int> labels;
 

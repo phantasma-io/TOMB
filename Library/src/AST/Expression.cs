@@ -22,7 +22,7 @@ namespace Phantasma.Tomb.AST
 
 		public static Expression AutoCast(Expression expr, VarType expectedType)
 		{
-			if (expr.ResultType == expectedType || expectedType.Kind == VarKind.Any)
+			if (IsCompatibleType(expr.ResultType, expectedType))
 			{
 				return expr;
 			}
@@ -43,6 +43,39 @@ namespace Phantasma.Tomb.AST
 			}
 
 			throw new CompilerException($"expected {expectedType} expression, got {expr.ResultType} instead");
+		}
+
+		public static bool IsCompatibleType(VarType actualType, VarType expectedType)
+		{
+			if (actualType == expectedType || expectedType.Kind == VarKind.Any)
+			{
+				return true;
+			}
+
+			if (actualType.Kind != expectedType.Kind)
+			{
+				return false;
+			}
+
+			// Built-in library signatures intentionally use unresolved placeholders
+			// (for example Module/Method without a concrete declaration node).
+			// Those placeholders must accept any concrete value of the same kind.
+			switch (expectedType)
+			{
+				case StructVarType structType when string.IsNullOrEmpty(structType.name):
+					return true;
+
+				case EnumVarType enumType when string.IsNullOrEmpty(enumType.name):
+					return true;
+
+				case MethodVarType methodType when methodType.method == null:
+					return true;
+
+				case ModuleVarType moduleType when moduleType.module == null:
+					return true;
+			}
+
+			return false;
 		}
 	}
 

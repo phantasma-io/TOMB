@@ -6,48 +6,73 @@ namespace Phantasma.Tomb.AST.Statements
 {
 	public class AssignStatement : Statement
 	{
-		public VarDeclaration variable;
-		public Expression valueExpression;
-		public Expression keyExpression; // can be null, if not null it should be an expression that resolves into a key (struct field name or array index)
+		public VarDeclaration? variable;
+		public Expression? valueExpression;
+		public Expression? keyExpression; // can be null, if not null it should be an expression that resolves into a key (struct field name or array index)
 
 		public AssignStatement() : base()
 		{
 
 		}
 
+		private VarDeclaration RequireVariable()
+		{
+			if (variable != null)
+			{
+				return variable;
+			}
+
+			throw new CompilerException("assignment target not initialized");
+		}
+
+		private Expression RequireValueExpression()
+		{
+			if (valueExpression != null)
+			{
+				return valueExpression;
+			}
+
+			throw new CompilerException("assignment value not initialized");
+		}
+
 		public override void Visit(Action<Node> callback)
 		{
 			callback(this);
-			variable.Visit(callback);
-			valueExpression.Visit(callback);
+			RequireVariable().Visit(callback);
+			RequireValueExpression().Visit(callback);
 			keyExpression?.Visit(callback);
 		}
 
 		public override bool IsNodeUsed(Node node)
 		{
-			return (node == this) || variable.IsNodeUsed(node) || valueExpression.IsNodeUsed(node) || (keyExpression != null && keyExpression.IsNodeUsed(node));
+			var targetVariable = RequireVariable();
+			var targetValue = RequireValueExpression();
+			return (node == this) || targetVariable.IsNodeUsed(node) || targetValue.IsNodeUsed(node) || (keyExpression != null && keyExpression.IsNodeUsed(node));
 		}
 
 		public override void GenerateCode(CodeGenerator output)
 		{
-			if (variable.Register == null)
+			var targetVariable = RequireVariable();
+			var targetValue = RequireValueExpression();
+
+			if (targetVariable.Register == null)
 			{
-				variable.Register = Compiler.Instance.AllocRegister(output, variable, variable.Name);
+				targetVariable.Register = Compiler.Instance.AllocRegister(output, targetVariable, targetVariable.Name);
 			}
 
-			var srcReg = valueExpression.GenerateCode(output);
+			Register? srcReg = targetValue.GenerateCode(output);
 
 			if (keyExpression != null)
 			{
-				var idxReg = keyExpression.GenerateCode(output);
+				Register? idxReg = keyExpression.GenerateCode(output);
 
-				output.AppendLine(this, $"PUT {srcReg} {variable.Register} {idxReg}");
+				output.AppendLine(this, $"PUT {srcReg} {targetVariable.Register} {idxReg}");
 
 				Compiler.Instance.DeallocRegister(ref idxReg);
 			}
 			else
 			{
-				output.AppendLine(this, $"COPY {srcReg} {variable.Register}");
+				output.AppendLine(this, $"COPY {srcReg} {targetVariable.Register}");
 			}
 
 			Compiler.Instance.DeallocRegister(ref srcReg);
@@ -55,4 +80,3 @@ namespace Phantasma.Tomb.AST.Statements
 	}
 
 }
-

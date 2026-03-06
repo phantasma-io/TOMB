@@ -36,7 +36,7 @@ namespace Phantasma.Tomb.Compilers
 			{
 				var firstToken = FetchToken();
 
-				Module module = null;
+				Module? module = null;
 
 				switch (firstToken.value)
 				{
@@ -246,6 +246,11 @@ namespace Phantasma.Tomb.Compilers
 									var propertyName = "get" + char.ToUpper(varName[0]) + varName.Substring(1);
 
 									var contract = module as Contract;
+									if (contract == null)
+									{
+										throw new CompilerException("public properties are only supported inside contracts");
+									}
+
 									var parameters = new MethodParameter[0];
 									var scope = new Scope(module.Scope, propertyName, parameters);
 
@@ -484,7 +489,7 @@ namespace Phantasma.Tomb.Compilers
 							var temp = FetchToken();
 							Rewind();
 
-							Expression expr;
+							Expression? expr;
 							if (temp.value != ";")
 							{
 								expr = ExpectExpression(scope);
@@ -642,7 +647,7 @@ namespace Phantasma.Tomb.Compilers
 
 							ExpectToken("local");
 
-							AssignStatement initCmd;
+							AssignStatement? initCmd;
 							forCommand.loopVar = ParseVariableDeclaration(scope, out initCmd);
 							if (initCmd == null)
 							{
@@ -818,7 +823,7 @@ namespace Phantasma.Tomb.Compilers
 								var varDecl = scope.FindVariable(token.value, false);
 								bool isStructField = false;
 
-								LibraryDeclaration libDecl;
+								LibraryDeclaration? libDecl = null;
 
 								if (varDecl != null)
 								{
@@ -867,6 +872,11 @@ namespace Phantasma.Tomb.Compilers
 
 								if (isStructField)
 								{
+									if (varDecl == null)
+									{
+										throw new CompilerException("struct field assignment target was not resolved");
+									}
+
 									var fieldName = ExpectIdentifier();
 
 									next = FetchToken();
@@ -881,6 +891,10 @@ namespace Phantasma.Tomb.Compilers
 
 										var structDecl = _structs[structName];
 										var fieldDecl = structDecl.fields.FirstOrDefault(x => x.name == fieldName);
+										if (fieldDecl.type == null)
+										{
+											throw new CompilerException($"struct {structName} does not contain field {fieldName}");
+										}
 
 										var assignment = new AssignStatement();
 										assignment.variable = varDecl;
@@ -933,12 +947,12 @@ namespace Phantasma.Tomb.Compilers
 			}
 		}
 
-		private VarDeclaration ParseVariableDeclaration(Scope scope, out AssignStatement assignment)
+		private VarDeclaration ParseVariableDeclaration(Scope scope, out AssignStatement? assignment)
 		{
 			var varName = ExpectIdentifier();
 
 			var tmp = FetchToken();
-			VarType type = null;
+			VarType? type = null;
 
 			if (tmp.value == ":")
 			{
@@ -951,7 +965,7 @@ namespace Phantasma.Tomb.Compilers
 
 			var next = FetchToken();
 
-			Expression initExpr;
+			Expression? initExpr;
 			if (next.kind == TokenKind.Operator)
 			{
 				if (next.value == Lexer.AssignmentOperator)
@@ -977,6 +991,11 @@ namespace Phantasma.Tomb.Compilers
 			{
 				initExpr = null;
 				Rewind();
+			}
+
+			if (type == null)
+			{
+				throw new CompilerException($"Could not resolve variable type for {varName}");
 			}
 
 			var varDecl = new VarDeclaration(scope, varName, type, VarStorage.Local);

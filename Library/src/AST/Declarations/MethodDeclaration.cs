@@ -16,13 +16,22 @@ namespace Phantasma.Tomb.AST.Declarations
 		public readonly MethodInterface @interface;
 		public readonly Scope scope;
 
-		public StatementBlock body { get; internal set; }
+		public StatementBlock? body { get; internal set; }
 
 		public MethodDeclaration(Scope scope, MethodInterface @interface) : base(scope.Parent, @interface.Name)
 		{
-			this.body = null;
 			this.scope = scope;
 			this.@interface = @interface;
+		}
+
+		private StatementBlock RequireBody()
+		{
+			if (body != null)
+			{
+				return body;
+			}
+
+			throw new CompilerException($"method body not initialized: {Name}");
 		}
 
 		protected override void ValidateName()
@@ -36,16 +45,19 @@ namespace Phantasma.Tomb.AST.Declarations
 		public override void Visit(Action<Node> callback)
 		{
 			callback(this);
-			body.Visit(callback);
+			RequireBody().Visit(callback);
 		}
 
 		public override bool IsNodeUsed(Node node)
 		{
-			return (node == this) || (body.IsNodeUsed(node));
+			return (node == this) || RequireBody().IsNodeUsed(node);
 		}
 
 		public void GenerateCode(CodeGenerator output)
 		{
+			var methodBody = RequireBody();
+			var parentScope = this.scope.Parent ?? throw new CompilerException($"method scope parent not initialized: {Name}");
+
 			output.AppendLine(this);
 			output.AppendLine(this, $"// ********* {this.Name} {this.@interface.Kind} ***********");
 
@@ -72,8 +84,8 @@ namespace Phantasma.Tomb.AST.Declarations
 
 			this.@interface.StartAsmLine = output.LineCount;
 
-			Register tempReg1 = null;
-			Register tempReg2 = null;
+			Register? tempReg1 = null;
+			Register? tempReg2 = null;
 
 			bool isConstructor = this.@interface.Kind == MethodKind.Constructor;
 
@@ -100,7 +112,7 @@ namespace Phantasma.Tomb.AST.Declarations
 
 			// here we generate code that runs at the entry point of this method
 			// we need to fetch the global variables from storage and allocate registers for them
-			foreach (var variable in this.scope.Parent.Variables.Values)
+			foreach (var variable in parentScope.Variables.Values)
 			{
 				// validate NFT implicit variables
 				if (variable.Storage != VarStorage.Global)
@@ -117,7 +129,7 @@ namespace Phantasma.Tomb.AST.Declarations
 				// this is REQUIRED right now until chain implementation of Contract.Kill is improved
 				if (isConstructor && variable.Type.IsStorageBound)
 				{
-					var storageClassName = variable.Type.ToString().Replace("Storage_", "");
+					var storageClassName = variable.Type.ToString()?.Replace("Storage_", "") ?? throw new CompilerException($"could not resolve storage class name for {variable.Name}");
 
 					output.AppendLine(this, $"// clearing {variable.Name} storage");
 					output.AppendLine(this, $"LOAD r0 \"{variable.Name}\"");
@@ -170,11 +182,12 @@ namespace Phantasma.Tomb.AST.Declarations
 
 			if (this.scope.Module.Kind == ModuleKind.NFT)
 			{
+				var parentModule = this.scope.Module.Parent ?? throw new CompilerException($"NFT module parent not initialized for {this.scope.Module.Name}");
 				var idReg = Compiler.Instance.AllocRegister(output, this);
 				output.AppendLine(this, $"POP {idReg} // get nft tokenID from stack");
-				implicits = this.scope.Parent.Variables.Values.Where(x => x.Storage == VarStorage.NFT && this.IsNodeUsed(x) && !x.Name.Equals("_tokenID", StringComparison.OrdinalIgnoreCase)).ToList();
+				implicits = parentScope.Variables.Values.Where(x => x.Storage == VarStorage.NFT && this.IsNodeUsed(x) && !x.Name.Equals("_tokenID", StringComparison.OrdinalIgnoreCase)).ToList();
 
-				VarDeclaration tokenIDVar = this.scope.Parent.Variables.Values.Where(x => x.Storage == VarStorage.NFT && this.IsNodeUsed(x) && x.Name.Equals("_tokenID", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+				VarDeclaration? tokenIDVar = parentScope.Variables.Values.Where(x => x.Storage == VarStorage.NFT && this.IsNodeUsed(x) && x.Name.Equals("_tokenID", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 
 				if (implicits.Count > 0)
 				{
@@ -183,7 +196,7 @@ namespace Phantasma.Tomb.AST.Declarations
 					output.AppendLine(this, $"LOAD r0 \"" + fieldStr + "\"");
 					output.AppendLine(this, $"PUSH r0 // fields");
 					output.AppendLine(this, $"PUSH {idReg} // tokenID");
-					output.AppendLine(this, $"LOAD r0 \"" + this.scope.Module.Parent.Name + "\"");
+					output.AppendLine(this, $"LOAD r0 \"" + parentModule.Name + "\"");
 					output.AppendLine(this, $"PUSH r0 // symbol");
 					output.AppendLine(this, $"LOAD r0 \"Runtime.ReadToken\"");
 					output.AppendLine(this, $"EXTCALL r0");
@@ -249,7 +262,7 @@ namespace Phantasma.Tomb.AST.Declarations
 			}
 
 			this.scope.Enter(output);
-			body.GenerateCode(output);
+			methodBody.GenerateCode(output);
 			this.scope.Leave(output);
 
 			foreach (var variable in this.scope.Variables.Values)
@@ -270,7 +283,7 @@ namespace Phantasma.Tomb.AST.Declarations
 			output.AppendLine(this, $"@{GetExitLabel()}:");
 
 			// NOTE we don't need to dealloc anything here besides the global vars
-			foreach (var variable in this.scope.Parent.Variables.Values)
+			foreach (var variable in parentScope.Variables.Values)
 			{
 				if (variable.Storage != VarStorage.Global)
 				{
@@ -296,14 +309,14 @@ namespace Phantasma.Tomb.AST.Declarations
 				}
 
 				bool isAssigned = false;
-				this.body.Visit((node) =>
+				methodBody.Visit((node) =>
+			{
+				var assignement = node as AssignStatement;
+				if (assignement != null && assignement.variable == variable)
 				{
-					var assignement = node as AssignStatement;
-					if (assignement != null && assignement.variable == variable)
-					{
-						isAssigned = true;
-					}
-				});
+					isAssigned = true;
+				}
+			});
 
 				// if the global variable is not assigned within the current method, no need to save it value back to the storage
 				if (isAssigned)
@@ -337,7 +350,7 @@ namespace Phantasma.Tomb.AST.Declarations
 			{
 				// TODO validate if all possible paths have a return 
 				bool hasReturn = false;
-				this.body.Visit((node) =>
+				methodBody.Visit((node) =>
 				{
 					if (node is ReturnStatement)
 					{

@@ -134,7 +134,7 @@ namespace Phantasma.Business.CodeGen.Assembler
 
 		public static byte[] AsBytes(this string arg)
 		{
-			return Base16.Decode(arg);
+			return Base16.Decode(arg) ?? throw new FormatException("invalid hex bytes argument");
 		}
 	}
 }

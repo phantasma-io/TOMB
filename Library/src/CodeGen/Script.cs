@@ -2,24 +2,53 @@
 using Phantasma.Tomb.AST;
 using Phantasma.Tomb.AST.Statements;
 using Phantasma.Tomb.AST.Declarations;
-using PhantasmaPhoenix.Protocol;
 using Phantasma.Core.Domain.Contract;
 
 namespace Phantasma.Tomb.CodeGen
 {
 	public class Script : Module
 	{
-		public StatementBlock main;
+		public StatementBlock? main;
 
-		public MethodParameter[] Parameters { get; internal set; }
-		public VarType ReturnType;
+		public MethodParameter[]? Parameters { get; internal set; }
+		public VarType? ReturnType;
 
 		public Script(string name, ModuleKind kind) : base(name, kind)
 		{
 
 		}
 
-		public override MethodDeclaration FindMethod(string name)
+		private StatementBlock RequireMain()
+		{
+			if (main != null)
+			{
+				return main;
+			}
+
+			throw new CompilerException("script body not initialized");
+		}
+
+		private MethodParameter[] RequireParameters()
+		{
+			if (Parameters != null)
+			{
+				return Parameters;
+			}
+
+			throw new CompilerException("script parameters not initialized");
+		}
+
+		private VarType RequireReturnType()
+		{
+			if (ReturnType != null)
+			{
+				return ReturnType;
+			}
+
+			throw new CompilerException("script return type not initialized");
+		}
+
+		public override MethodDeclaration? FindMethod(string name)
 		{
 			return null;
 		}
@@ -39,8 +68,7 @@ namespace Phantasma.Tomb.CodeGen
 				}
 			}
 
-
-			return main.IsNodeUsed(node);
+			return RequireMain().IsNodeUsed(node);
 		}
 
 		public override void Visit(Action<Node> callback)
@@ -51,7 +79,7 @@ namespace Phantasma.Tomb.CodeGen
 			}
 
 			callback(this);
-			main.Visit(callback);
+			RequireMain().Visit(callback);
 		}
 
 
@@ -59,35 +87,39 @@ namespace Phantasma.Tomb.CodeGen
 		{
 			this.Scope.Enter(output);
 
-			this.main.ParentScope.Enter(output);
+			var scriptMain = RequireMain();
+			var parameters = RequireParameters();
+			var returnType = RequireReturnType();
 
-			foreach (var parameter in this.Parameters)
+			scriptMain.ParentScope.Enter(output);
+
+			foreach (var parameter in parameters)
 			{
 				var reg = Compiler.Instance.AllocRegister(output, this, parameter.Name);
 				output.AppendLine(this, $"POP {reg}");
 
 				this.CallNecessaryConstructors(output, parameter.Type, reg);
 
-				if (!this.main.ParentScope.Variables.ContainsKey(parameter.Name))
+				if (!scriptMain.ParentScope.Variables.ContainsKey(parameter.Name))
 				{
 					throw new CompilerException("script parameter not initialized: " + parameter.Name);
 				}
 
-				var varDecl = this.main.ParentScope.Variables[parameter.Name];
+				var varDecl = scriptMain.ParentScope.Variables[parameter.Name];
 				varDecl.Register = reg;
 			}
 
-			this.main.GenerateCode(output);
-			this.main.ParentScope.Leave(output);
+			scriptMain.GenerateCode(output);
+			scriptMain.ParentScope.Leave(output);
 
-			if (ReturnType.Kind == VarKind.None)
+			if (returnType.Kind == VarKind.None)
 			{
 				output.AppendLine(this, "RET");
 			}
 			else
 			{
 				bool hasReturn = false;
-				this.main.Visit((node) =>
+				scriptMain.Visit((node) =>
 				{
 					if (node is ReturnStatement)
 					{
@@ -103,8 +135,7 @@ namespace Phantasma.Tomb.CodeGen
 
 			this.Scope.Leave(output);
 
-			return null;
-			//return new ContractInterface(Enumerable.Empty<ContractMethod>(), Enumerable.Empty<ContractEvent>());
+			return ContractInterface.Empty;
 		}
 
 	}

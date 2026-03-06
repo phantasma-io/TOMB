@@ -7,11 +7,11 @@ namespace Phantasma.Tomb.AST.Statements
 {
 	public class ReturnStatement : Statement
 	{
-		public Expression expression;
+		public Expression? expression;
 
 		public MethodDeclaration method;
 
-		public ReturnStatement(MethodDeclaration method, Expression expression) : base()
+		public ReturnStatement(MethodDeclaration method, Expression? expression) : base()
 		{
 			this.expression = expression;
 			this.method = method;
@@ -31,8 +31,9 @@ namespace Phantasma.Tomb.AST.Statements
 		public override void GenerateCode(CodeGenerator output)
 		{
 			var returnType = this.method.@interface.ReturnType;
+			var methodParentScope = this.method.ParentScope ?? throw new CompilerException($"method scope not initialized for return in {method.Name}");
 
-			var simpleReturn = (this.method.ParentScope.Module is Script);
+			var simpleReturn = methodParentScope.Module is Script;
 			var isMulti = this.method.@interface.IsMulti;
 
 			if (expression != null)
@@ -44,7 +45,7 @@ namespace Phantasma.Tomb.AST.Statements
 
 				this.expression = Expression.AutoCast(expression, returnType);
 
-				var reg = this.expression.GenerateCode(output);
+				Register? reg = this.expression.GenerateCode(output);
 				output.AppendLine(this, $"PUSH {reg}");
 				Compiler.Instance.DeallocRegister(ref reg);
 			}
@@ -71,4 +72,3 @@ namespace Phantasma.Tomb.AST.Statements
 	}
 
 }
-

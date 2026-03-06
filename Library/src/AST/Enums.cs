@@ -1,5 +1,4 @@
-﻿using Phantasma.Core;
-using Phantasma.Tomb.AST.Declarations;
+﻿using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.CodeGen;
 using System.Collections.Generic;
 
@@ -60,7 +59,7 @@ namespace Phantasma.Tomb.AST
 			return Find(VarKind.Array, kind.ToString());
 		}
 
-		public static VarType Find(VarKind kind, object extra = null)
+		public static VarType Find(VarKind kind, object? extra = null)
 		{
 			var key = kind.ToString();
 			if (extra != null)
@@ -96,38 +95,72 @@ namespace Phantasma.Tomb.AST
 					break;
 
 				case VarKind.Decimal:
-					Throw.IfNull(extra, kind + " type requires extra data for initialization");
-					result = new DecimalVarType((int)extra);
+					if (extra is not int decimals)
+					{
+						throw new CompilerException(kind + " type requires decimal precision for initialization");
+					}
+
+					result = new DecimalVarType(decimals);
 					break;
 
 				case VarKind.Struct:
-					result = new StructVarType((string)extra);
+					if (extra != null && extra is not string)
+					{
+						throw new CompilerException("struct type requires a struct name");
+					}
+
+					// Library ABI declarations use anonymous struct placeholders that are
+					// resolved by call-site context later (for example Runtime.fromBytes).
+					var structName = extra as string ?? string.Empty;
+					result = new StructVarType(structName);
 					break;
 
 				case VarKind.Enum:
-					result = new EnumVarType((string)extra);
+					// Unscoped enum parameters (without concrete enum name) are valid in
+					// library declarations and are resolved later by caller context.
+					var enumName = extra as string ?? string.Empty;
+					result = new EnumVarType(enumName);
 					break;
 
 				case VarKind.Method:
-					result = new MethodVarType((MethodDeclaration)extra);
+					if (extra != null && extra is not MethodDeclaration)
+					{
+						throw new CompilerException("method type requires a method declaration");
+					}
+
+					// A method-type placeholder is valid in built-in signatures (Task.start).
+					var methodDeclaration = extra as MethodDeclaration;
+					result = new MethodVarType(methodDeclaration);
 					break;
 
 				case VarKind.Module:
-					result = new ModuleVarType((Module)extra);
+					if (extra != null && extra is not Module)
+					{
+						throw new CompilerException("module type requires a module declaration");
+					}
+
+					// Module payload types may be declared before the concrete module node exists.
+					var module = extra as Module;
+					result = new ModuleVarType(module);
 					break;
 
 				case VarKind.Generic:
-					result = new GenericVarType((int)extra);
+					if (extra is not int genericIndex)
+					{
+						throw new CompilerException("generic type requires generic index");
+					}
+
+					result = new GenericVarType(genericIndex);
 					break;
 
 				case VarKind.Array:
-					VarType elementType = extra as VarType;
+					VarType? elementType = extra as VarType;
 
 					if (elementType == null)
 					{
 						VarKind elementKind;
 
-						var extraStr = extra != null ? extra.ToString() : null;
+						var extraStr = extra?.ToString();
 
 						if (string.IsNullOrEmpty(extraStr))
 						{
@@ -174,7 +207,7 @@ namespace Phantasma.Tomb.AST
 	{
 		public readonly string name;
 
-		public StructDeclaration decl;
+		public StructDeclaration? decl;
 
 		public StructVarType(string name) : base(VarKind.Struct)
 		{
@@ -183,6 +216,11 @@ namespace Phantasma.Tomb.AST
 
 		public override string ToString()
 		{
+			if (string.IsNullOrEmpty(name))
+			{
+				return Kind.ToString();
+			}
+
 			return $"{Kind}<{name}>";
 		}
 	}
@@ -191,7 +229,7 @@ namespace Phantasma.Tomb.AST
 	{
 		public readonly string name;
 
-		public EnumDeclaration decl;
+		public EnumDeclaration? decl;
 
 		public EnumVarType(string name) : base(VarKind.Enum)
 		{
@@ -256,8 +294,8 @@ namespace Phantasma.Tomb.AST
 
 	public class MethodVarType : VarType
 	{
-		public readonly MethodDeclaration method;
-		public MethodVarType(MethodDeclaration method) : base(VarKind.Method)
+		public readonly MethodDeclaration? method;
+		public MethodVarType(MethodDeclaration? method) : base(VarKind.Method)
 		{
 			this.method = method;
 		}
@@ -274,9 +312,9 @@ namespace Phantasma.Tomb.AST
 
 	public class ModuleVarType : VarType
 	{
-		public readonly Module module;
+		public readonly Module? module;
 
-		public ModuleVarType(Module module) : base(VarKind.Module)
+		public ModuleVarType(Module? module) : base(VarKind.Module)
 		{
 			this.module = module;
 		}

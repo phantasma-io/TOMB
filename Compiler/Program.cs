@@ -1,16 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Collections.Generic;
-
 using Phantasma.Tomb.CodeGen;
 using Phantasma.Tomb.Validation;
-
-using Module = Phantasma.Tomb.CodeGen.Module;
 using PhantasmaPhoenix.Cryptography;
 using DomainSettings = PhantasmaPhoenix.Protocol.DomainSettings;
+using Module = Phantasma.Tomb.CodeGen.Module;
 
 namespace Phantasma.Tomb
 {
@@ -19,9 +16,14 @@ namespace Phantasma.Tomb
 		static void ExportLibraryInfo()
 		{
 			var sb = new StringBuilder();
+			var exportScope = new Script("library_export", ModuleKind.Script).Scope;
+
 			foreach (var libraryName in Contract.AvailableLibraries)
 			{
-				var library = Contract.LoadLibrary(libraryName, null, libraryName == Module.FormatLibraryName ? ModuleKind.Description : ModuleKind.Contract);
+				var library = Contract.LoadLibrary(
+					libraryName,
+					exportScope,
+					libraryName == Module.FormatLibraryName ? ModuleKind.Description : ModuleKind.Contract);
 
 				sb.AppendLine("### " + libraryName);
 				sb.AppendLine("| Method | Return type | Description|");
@@ -29,21 +31,19 @@ namespace Phantasma.Tomb
 				foreach (var method in library.methods.Values)
 				{
 					var parameters = new StringBuilder();
-					int index = -1;
 					foreach (var entry in method.Parameters)
 					{
-						index++;
-
 						if (parameters.Length > 0)
 						{
 							parameters.Append(", ");
 						}
 
-						parameters.Append(entry.Name + ":" + entry.Type + "");
+						parameters.Append(entry.Name + ":" + entry.Type);
 					}
 
 					sb.AppendLine($"| {libraryName}.{method.Name}({parameters}) | {method.ReturnType} | TODO|");
 				}
+
 				sb.AppendLine("");
 			}
 
@@ -93,30 +93,36 @@ namespace Phantasma.Tomb
 		{
 			foreach (Type type in assembly.GetTypes())
 			{
-				var attr = type.GetCustomAttributes(typeof(CompilerAttribute), true);
-				if (attr.Length > 0)
+				var attrs = type.GetCustomAttributes(typeof(CompilerAttribute), true);
+				if (attrs.Length == 0 || attrs[0] is not CompilerAttribute compilerAttribute)
 				{
-					var myAttribute = attr[0] as CompilerAttribute;
+					continue;
+				}
 
-					yield return new KeyValuePair<string, Type>(myAttribute.Extension, type);
+				if (!string.IsNullOrEmpty(compilerAttribute.Extension))
+				{
+					yield return new KeyValuePair<string, Type>(compilerAttribute.Extension, type);
 				}
 			}
 		}
 
-		static Compiler FindCompilerForFile(string fileName, int targetProtocolVersion)
+		static Compiler? FindCompilerForFile(string fileName, int targetProtocolVersion)
 		{
 			var extension = Path.GetExtension(fileName);
-
 			var compilerType = typeof(Compiler);
-
 			var compilerTypes = GetTypesWithHelpAttribute(compilerType.Assembly);
 
 			foreach (var entry in compilerTypes)
 			{
-				if (entry.Key == extension)
+				if (entry.Key != extension)
 				{
-					var targetCompilerType = entry.Value;
-					return (Compiler)Activator.CreateInstance(targetCompilerType, new object[] { targetProtocolVersion });
+					continue;
+				}
+
+				var compilerInstance = Activator.CreateInstance(entry.Value, new object[] { targetProtocolVersion });
+				if (compilerInstance is Compiler compiler)
+				{
+					return compiler;
 				}
 			}
 
@@ -149,11 +155,10 @@ namespace Phantasma.Tomb
 
 		static void Main(string[] args)
 		{
-			string sourceFileName = null;
-			string outputPath = null;
+			string sourceFileName = string.Empty;
+			string outputPath = string.Empty;
 
 			Compiler.WarningHandler = ShowWarning;
-
 			int targetProtocolVersion = DomainSettings.LatestKnownProtocol;
 
 			for (int i = 0; i < args.Length; i++)
@@ -164,24 +169,25 @@ namespace Phantasma.Tomb
 					break;
 				}
 
-				var tmp = args[i].Split(':', 2);
-
-				var tag = tmp[0];
-				string value = tmp.Length == 2 ? tmp[1] : null;
+				var parts = args[i].Split(':', 2);
+				var tag = parts[0];
+				var value = parts.Length == 2 ? parts[1] : string.Empty;
 
 				switch (tag)
 				{
 					case "protocol":
-						int version = -1;
-						if (int.TryParse(value, out version) && version > 0)
 						{
-							targetProtocolVersion = version;
+							if (int.TryParse(value, out var version) && version > 0)
+							{
+								targetProtocolVersion = version;
+							}
+							else
+							{
+								ShowWarning("Invalid protocol version: " + value);
+							}
+
+							break;
 						}
-						else
-						{
-							ShowWarning("Invalid protocol version: " + value);
-						}
-						break;
 
 					case "output":
 						{
@@ -191,7 +197,15 @@ namespace Phantasma.Tomb
 
 					case "libpath":
 						{
-							Module.AddLibraryPath(value);
+							if (string.IsNullOrEmpty(value))
+							{
+								ShowWarning("Invalid libpath option: expected libpath:<directory>");
+							}
+							else
+							{
+								Module.AddLibraryPath(value);
+							}
+
 							break;
 						}
 
@@ -203,8 +217,7 @@ namespace Phantasma.Tomb
 
 					case "nativecheck":
 						{
-							NativeCheckMode mode;
-							if (TryParseNativeCheckMode(value, out mode))
+							if (!string.IsNullOrEmpty(value) && TryParseNativeCheckMode(value, out var mode))
 							{
 								Compiler.NativeCheckMode = mode;
 							}
@@ -212,6 +225,7 @@ namespace Phantasma.Tomb
 							{
 								ShowWarning("Invalid nativecheck mode: " + value + " (expected off|warn|error)");
 							}
+
 							break;
 						}
 
@@ -230,10 +244,10 @@ namespace Phantasma.Tomb
 				sourceFileName = @"../../../builtins.tomb";
 			}
 #else
-            if (string.IsNullOrEmpty(sourceFileName))
-            {
-                sourceFileName = @"my_contract.tomb";
-            }
+			if (string.IsNullOrEmpty(sourceFileName))
+			{
+				sourceFileName = @"my_contract.tomb";
+			}
 #endif
 
 			sourceFileName = Path.GetFullPath(sourceFileName);
@@ -244,9 +258,9 @@ namespace Phantasma.Tomb
 				return;
 			}
 
-			if (outputPath == null)
+			if (string.IsNullOrEmpty(outputPath))
 			{
-				outputPath = Path.GetDirectoryName(sourceFileName);
+				outputPath = Path.GetDirectoryName(sourceFileName) ?? string.Empty;
 
 				if (string.IsNullOrEmpty(outputPath) || compilingBuiltins)
 				{
@@ -272,7 +286,6 @@ namespace Phantasma.Tomb
 			Console.WriteLine("Output path: " + outputPath);
 
 			var sourceCode = File.ReadAllText(sourceFileName);
-
 			Console.WriteLine("Compiling " + sourceFileName);
 			Console.WriteLine("Target protocol version: " + targetProtocolVersion);
 
@@ -300,7 +313,7 @@ namespace Phantasma.Tomb
 			catch (CompilerException ex)
 			{
 				Console.WriteLine(ex.Message);
-				System.Environment.Exit(-1);
+				Environment.Exit(-1);
 			}
 
 			Console.WriteLine("Success!");
@@ -308,7 +321,6 @@ namespace Phantasma.Tomb
 #if DEBUG
 			//ExportLibraryInfo();
 #endif
-
 		}
 	}
 }

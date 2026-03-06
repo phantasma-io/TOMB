@@ -9,8 +9,8 @@ namespace Phantasma.Tomb.AST.Statements
 		public LiteralExpression value;
 		public StatementBlock body;
 
-		internal Register variable;
-		internal string endLabel;
+		internal Register? variable;
+		internal string? endLabel;
 
 		public CaseStatement(LiteralExpression value, StatementBlock body) : base()
 		{
@@ -20,7 +20,12 @@ namespace Phantasma.Tomb.AST.Statements
 
 		public override void GenerateCode(CodeGenerator output)
 		{
-			var reg = value.GenerateCode(output);
+			if (variable == null || string.IsNullOrEmpty(endLabel))
+			{
+				throw new CompilerException("case statement not initialized by parent switch");
+			}
+
+			Register? reg = value.GenerateCode(output);
 
 			output.AppendLine(this, $"EQUAL {variable} {reg} {reg}");
 
@@ -45,4 +50,3 @@ namespace Phantasma.Tomb.AST.Statements
 	}
 
 }
-

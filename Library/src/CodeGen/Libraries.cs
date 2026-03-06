@@ -246,7 +246,8 @@ namespace Phantasma.Tomb.CodeGen
 						libDecl.AddMethod("get", MethodImplementationType.Custom, VarType.Generic(0), new[] { new MethodParameter("array", VarKind.Any), new MethodParameter("index", VarKind.Number) })
 							.SetPreCallback((output, scope, expr) =>
 							{
-								var vmType = MethodInterface.ConvertType(expr.method.ReturnType);
+								var method = expr.method ?? throw new CompilerException("array.get callback missing method metadata");
+								var vmType = MethodInterface.ConvertType(method.ReturnType);
 								var reg = Compiler.Instance.AllocRegister(output, expr);
 
 								output.AppendLine(expr, $"LOAD {reg} {(int)vmType} // field type");
@@ -254,7 +255,7 @@ namespace Phantasma.Tomb.CodeGen
 
 								return reg;
 							})
-							.SetPostCallback(ConvertGenericResult);
+						.SetPostCallback(ConvertGenericResult);
 
 						// TODO not implemented yet... for now use builtin TOMB array support, eg: local temp: array<number>
 						libDecl.AddMethod("set", MethodImplementationType.Custom, VarKind.None, new[] { new MethodParameter("array", VarKind.Any), new MethodParameter("index", VarKind.Number), new MethodParameter("value", VarType.Generic(0)) });
@@ -559,6 +560,11 @@ namespace Phantasma.Tomb.CodeGen
 						.SetPreCallback((output, scope, expr) =>
 						{
 							var nftStruct = VarType.Find(VarKind.Struct, "NFT") as StructVarType;
+							if (nftStruct?.decl == null)
+							{
+								throw new CompilerException("NFT struct metadata is not initialized");
+							}
+
 							var reg = Compiler.Instance.AllocRegister(output, expr);
 
 							var fields = '\"' + string.Join(',', nftStruct.decl.fields.Select(x => x.name)) + '\"';
@@ -568,11 +574,11 @@ namespace Phantasma.Tomb.CodeGen
 
 							return reg;
 						})
-						.SetPostCallback((output, scope, method, reg) =>
-						{
-							output.AppendLine(method, $"UNPACK {reg} {reg}");
-							return reg;
-						});
+					.SetPostCallback((output, scope, method, reg) =>
+					{
+						output.AppendLine(method, $"UNPACK {reg} {reg}");
+						return reg;
+					});
 					break;
 
 				case "Organization":
@@ -595,7 +601,8 @@ namespace Phantasma.Tomb.CodeGen
 						libDecl.AddMethod("read", MethodImplementationType.ExtCall, VarType.Generic(0), new[] { new MethodParameter("contract", VarKind.String), new MethodParameter("field", VarKind.String) }).SetAlias("Data.Get")
 						.SetPreCallback((output, scope, expr) =>
 						{
-							var vmType = MethodInterface.ConvertType(expr.method.ReturnType);
+							var method = expr.method ?? throw new CompilerException("storage.read callback missing method metadata");
+							var vmType = MethodInterface.ConvertType(method.ReturnType);
 							var reg = Compiler.Instance.AllocRegister(output, expr);
 
 							output.AppendLine(expr, $"LOAD {reg} {(int)vmType} // field type");
@@ -603,7 +610,7 @@ namespace Phantasma.Tomb.CodeGen
 
 							return reg;
 						})
-						.SetPostCallback(ConvertGenericResult);
+					.SetPostCallback(ConvertGenericResult);
 
 						libDecl.AddMethod("write", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("field", VarKind.String), new MethodParameter("value", VarKind.Any) }).SetAlias("Data.Set");
 						libDecl.AddMethod("delete", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("field", VarKind.String) }).SetAlias("Data.Delete");
@@ -682,7 +689,8 @@ namespace Phantasma.Tomb.CodeGen
 					libDecl.AddMethod("get", MethodImplementationType.ExtCall, VarType.Generic(1), new[] { new MethodParameter("map", VarKind.String), new MethodParameter("key", VarType.Generic(0)) }).SetParameterCallback("map", ConvertFieldToStorageAccessRead)
 						.SetPreCallback((output, scope, expr) =>
 						{
-							var vmType = MethodInterface.ConvertType(expr.method.ReturnType);
+							var method = expr.method ?? throw new CompilerException("map.get callback missing method metadata");
+							var vmType = MethodInterface.ConvertType(method.ReturnType);
 							var reg = Compiler.Instance.AllocRegister(output, expr);
 
 							output.AppendLine(expr, $"LOAD {reg} {(int)vmType} // field type");
@@ -690,7 +698,7 @@ namespace Phantasma.Tomb.CodeGen
 
 							return reg;
 						})
-						.SetPostCallback(ConvertGenericResult);
+					.SetPostCallback(ConvertGenericResult);
 					libDecl.AddMethod("set", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("map", VarKind.String), new MethodParameter("key", VarType.Generic(0)), new MethodParameter("value", VarType.Generic(1)) }).SetParameterCallback("map", ConvertFieldToStorageAccessWrite);
 					libDecl.AddMethod("remove", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("map", VarKind.String), new MethodParameter("key", VarType.Generic(0)) }).SetParameterCallback("map", ConvertFieldToStorageAccessWrite);
 					libDecl.AddMethod("clear", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("map", VarKind.String) }).SetParameterCallback("map", ConvertFieldToStorageAccessWrite);
@@ -698,7 +706,8 @@ namespace Phantasma.Tomb.CodeGen
 					libDecl.AddMethod("has", MethodImplementationType.ExtCall, VarKind.Bool, new[] { new MethodParameter("map", VarKind.String), new MethodParameter("key", VarType.Generic(0)) }).SetParameterCallback("map", ConvertFieldToStorageAccessRead)
 						.SetPreCallback((output, scope, expr) =>
 						{
-							var vmType = MethodInterface.ConvertType(expr.method.ReturnType);
+							var method = expr.method ?? throw new CompilerException("map.has callback missing method metadata");
+							var vmType = MethodInterface.ConvertType(method.ReturnType);
 							var reg = Compiler.Instance.AllocRegister(output, expr);
 
 							output.AppendLine(expr, $"LOAD {reg} {(int)vmType} // field type");
@@ -712,7 +721,8 @@ namespace Phantasma.Tomb.CodeGen
 					libDecl.AddMethod("get", MethodImplementationType.ExtCall, VarType.Generic(0), new[] { new MethodParameter("list", VarKind.String), new MethodParameter("index", VarKind.Number) }).SetParameterCallback("list", ConvertFieldToStorageAccessRead)
 						.SetPreCallback((output, scope, expr) =>
 						{
-							var vmType = MethodInterface.ConvertType(expr.method.ReturnType);
+							var method = expr.method ?? throw new CompilerException("list.get callback missing method metadata");
+							var vmType = MethodInterface.ConvertType(method.ReturnType);
 							var reg = Compiler.Instance.AllocRegister(output, expr);
 
 							output.AppendLine(expr, $"LOAD {reg} {(int)vmType} // field type");
@@ -720,7 +730,7 @@ namespace Phantasma.Tomb.CodeGen
 
 							return reg;
 						})
-						.SetPostCallback(ConvertGenericResult);
+					.SetPostCallback(ConvertGenericResult);
 
 					libDecl.AddMethod("add", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("list", VarKind.String), new MethodParameter("value", VarType.Generic(0)) }).SetParameterCallback("list", ConvertFieldToStorageAccessWrite);
 					libDecl.AddMethod("replace", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("list", VarKind.String), new MethodParameter("index", VarKind.Number), new MethodParameter("value", VarType.Generic(0)) }).SetParameterCallback("list", ConvertFieldToStorageAccessWrite);
@@ -836,7 +846,7 @@ namespace Phantasma.Tomb.CodeGen
 				return _externalLibs[importName];
 			}
 
-			string libraryFileName = null;
+			string? libraryFileName = null;
 
 			var libNamePrefix = importName.Replace('.', Path.DirectorySeparatorChar);
 

@@ -20,14 +20,16 @@ namespace Phantasma.Tomb.AST.Declarations
 			// DO NOTHING
 		}
 
-		public MethodInterface AddMethod(string name, MethodImplementationType convention, VarKind returnKind, MethodParameter[] parameters, string alias = null, bool isBuiltin = false)
+		public MethodInterface AddMethod(string name, MethodImplementationType convention, VarKind returnKind, MethodParameter[] parameters, string? alias = null, bool isBuiltin = false)
 		{
 			return AddMethod(name, convention, VarType.Find(returnKind), parameters, alias, isBuiltin);
 		}
 
-		public MethodInterface AddMethod(string name, MethodImplementationType convention, VarType returnType, MethodParameter[] parameters, string alias = null, bool isBuiltin = false)
+		public MethodInterface AddMethod(string name, MethodImplementationType convention, VarType returnType, MethodParameter[] parameters, string? alias = null, bool isBuiltin = false)
 		{
-			if (!returnType.IsWeird && Compiler.Instance != null)
+			// Unit tests can build library declarations outside of a live compiler session.
+			// Method-name ABI validation should run only when a compiler context exists.
+			if (!returnType.IsWeird && Compiler.HasInstance)
 			{
 				var vmType = MethodInterface.ConvertType(returnType);
 
@@ -48,7 +50,18 @@ namespace Phantasma.Tomb.AST.Declarations
 			return method;
 		}
 
-		public MethodInterface FindMethod(string name, bool required = true)
+		public MethodInterface FindMethod(string name)
+		{
+			var result = FindMethod(name, required: false);
+			if (result != null)
+			{
+				return result;
+			}
+
+			throw new CompilerException("unknown method: " + name);
+		}
+
+		public MethodInterface? FindMethod(string name, bool required)
 		{
 			/*if (name != name.ToLower())
             {
@@ -85,6 +98,7 @@ namespace Phantasma.Tomb.AST.Declarations
 
 		public GenericLibraryDeclaration MakeGenericLib(string key, string name, IEnumerable<VarType> generics)
 		{
+			var parentScope = this.ParentScope ?? throw new CompilerException($"library scope not initialized: {Name}");
 			key = $"{this.Name}<{key}>";
 
 			if (_genericCache.ContainsKey(key))
@@ -92,7 +106,7 @@ namespace Phantasma.Tomb.AST.Declarations
 				return _genericCache[key];
 			}
 
-			var result = new GenericLibraryDeclaration(this.ParentScope, name, generics);
+			var result = new GenericLibraryDeclaration(parentScope, name, generics);
 			foreach (var method in this.methods.Values)
 			{
 				var newMethod = method.Clone(result);
@@ -113,13 +127,13 @@ namespace Phantasma.Tomb.AST.Declarations
 
 		public LibraryDeclaration PatchList(ListDeclaration listDecl)
 		{
-			var key = listDecl.ValueKind.ToString();
+			var key = listDecl.ValueKind.ToString() ?? throw new CompilerException("list generic key was not resolved");
 			return this.MakeGenericLib(key, this.Name, new[] { listDecl.ValueKind });
 		}
 
 		public LibraryDeclaration PatchSet(SetDeclaration setDecl)
 		{
-			var key = setDecl.ValueKind.ToString();
+			var key = setDecl.ValueKind.ToString() ?? throw new CompilerException("set generic key was not resolved");
 			return this.MakeGenericLib(key, this.Name, new[] { setDecl.ValueKind });
 		}
 	}

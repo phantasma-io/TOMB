@@ -9,7 +9,7 @@ namespace Phantasma.Tomb.AST.Declarations
 		public VarType Type;
 		public string Value;
 
-		public ConstDeclaration(Scope parentScope, string name, VarType kind, string value) : base(parentScope, name)
+		public ConstDeclaration(Scope? parentScope, string name, VarType kind, string value) : base(parentScope, name)
 		{
 			this.Type = kind;
 			this.Value = value;

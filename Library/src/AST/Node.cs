@@ -10,7 +10,7 @@ namespace Phantasma.Tomb.AST
 
 		public Node()
 		{
-			if (Compiler.Instance != null)
+			if (Compiler.HasInstance)
 			{
 				this.LineNumber = Compiler.Instance.CurrentLine;
 				this.Column = Compiler.Instance.CurrentColumn;

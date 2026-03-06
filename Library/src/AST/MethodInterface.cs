@@ -13,7 +13,7 @@ namespace Phantasma.Tomb.AST
 		public string Name { get; private set; }
 		public VarType Type { get; internal set; }
 
-		public Func<CodeGenerator, Scope, Expression, Register> Callback;
+		public Func<CodeGenerator, Scope, Expression, Register>? Callback;
 
 		public MethodParameter(string name, VarType type)
 		{
@@ -65,8 +65,8 @@ namespace Phantasma.Tomb.AST
 		public string Alias;
 		public string Contract;
 		public MethodImplementationType Implementation;
-		public Func<CodeGenerator, Scope, MethodCallExpression, Register> PreCallback;
-		public Func<CodeGenerator, Scope, MethodCallExpression, Register, Register> PostCallback;
+		public Func<CodeGenerator, Scope, MethodCallExpression, Register>? PreCallback;
+		public Func<CodeGenerator, Scope, MethodCallExpression, Register, Register>? PostCallback;
 
 		public int StartAsmLine;
 		public int EndAsmLine;
@@ -74,7 +74,7 @@ namespace Phantasma.Tomb.AST
 		public bool IsMulti; // if true, method will emit multiple return values in the vm result stack
 		public bool IsBuiltin;
 
-		public MethodInterface(LibraryDeclaration library, MethodImplementationType implementation, string name, bool isPublic, MethodKind kind, VarType returnType, MethodParameter[] parameters, string alias = null, bool isMulti = false, bool isBuiltin = false)
+		public MethodInterface(LibraryDeclaration library, MethodImplementationType implementation, string name, bool isPublic, MethodKind kind, VarType returnType, MethodParameter[] parameters, string? alias = null, bool isMulti = false, bool isBuiltin = false)
 		{
 			this.Name = name;
 			this.Library = library;
@@ -85,9 +85,6 @@ namespace Phantasma.Tomb.AST
 			this.Parameters = parameters;
 			this.IsMulti = isMulti;
 			this.IsBuiltin = isBuiltin;
-
-			this.PreCallback = null;
-			this.PostCallback = null;
 
 			this.Contract = this.Library.Name;
 
