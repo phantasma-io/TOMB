@@ -286,7 +286,8 @@ namespace Phantasma.Tomb.CodeGen
 
                                 var elementReg = Compiler.Instance.AllocRegister(output, expr);
                                 output.AppendLine(expr, $"GET {arrayReg} {elementReg} {sizeReg}");
-                                output.AppendLine(expr, $"REMOVE {arrayReg} {sizeReg}");
+                                // Phoenix VM opcode set does not expose array-key removal, so pop currently
+                                // returns the last element without mutating the backing array.
 
                                 Compiler.Instance.DeallocRegister(ref sizeReg);
                                 Compiler.Instance.DeallocRegister(ref arrayReg);

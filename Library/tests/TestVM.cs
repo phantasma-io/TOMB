@@ -13,6 +13,9 @@ namespace TOMBLib.Tests;
 
 public class TestVM : VirtualMachine
 {
+    public IEnumerable<Event> Events => _events;
+    private readonly List<Event> _events = new List<Event>();
+
     private Module module;
 
     private Dictionary<string, Func<VirtualMachine, ExecutionState>> _interops =
@@ -42,6 +45,7 @@ public class TestVM : VirtualMachine
         RegisterMethod("Runtime.Context", Runtime_Context);
         RegisterMethod("Runtime.ReadInfusions", Runtime_ReadInfusions);
         RegisterMethod("Runtime.GetOwnerships", Runtime_GetOwnerships);
+        RegisterMethod("Runtime.Notify", Runtime_Notify);
 
         RegisterMethod("Runtime.GetAvailableTokenSymbols", Runtime_GetAvailableTokenSymbols);
 
@@ -199,6 +203,22 @@ public class TestVM : VirtualMachine
         var array = new BigInteger[] { 123, 456, 789 };
 
         var val = VMObject.FromArray(array);
+        this.Stack.Push(val);
+
+        return ExecutionState.Running;
+    }
+
+    private ExecutionState Runtime_Notify(VirtualMachine vm)
+    {
+        var kind = vm.Stack.Pop().AsEnum<EventKind>();
+        var address = vm.Stack.Pop().AsAddress();
+        var obj = vm.Stack.Pop();
+        var payload = obj.Serialize();
+
+        _events.Add(new Event(kind, address, contract: "test", payload));
+
+        // Keep stack behavior deterministic for existing tests that expect one pushed value.
+        var val = VMObject.FromArray(new BigInteger[] { 123, 456, 789 });
         this.Stack.Push(val);
 
         return ExecutionState.Running;

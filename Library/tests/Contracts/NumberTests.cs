@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using PhantasmaPhoenix.Cryptography;
-using PhantasmaPhoenix.Protocol;
 using Phantasma.Core.Domain.Contract;
+using PhantasmaPhoenix.Protocol;
 using PhantasmaPhoenix.VM;
 using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.Compilers;
@@ -19,16 +19,16 @@ public class NumberTests
             @"
 contract test {
     global counter: number;
-    
+
     constructor(owner:address)	{
-        counter= 0; 
+        counter= 0;
     }
-    
+
     public increment() {
         if (counter < 0) {
             throw ""invalid state"";
-        }   
-                
+        }
+
         counter++;
     }
 }";
@@ -98,6 +98,111 @@ contract test{
     }
 
     [Test]
+    public void MathPow()
+    {
+        var sourceCode =
+            @"
+contract test{
+    import Math;
+    public power(a:number, b:number):number {
+        return Math.pow(a, b);
+    }
+}";
+
+        var parser = new TombLangCompiler();
+        var contract = parser.Process(sourceCode).First();
+
+        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+
+        TestVM vm;
+
+        // call increment
+        var calculate = contract.abi.FindMethod("power");
+        Assert.IsNotNull(calculate);
+
+        vm = new TestVM(contract, storage, calculate);
+        vm.Stack.Push(VMObject.FromObject(5));
+        vm.Stack.Push(VMObject.FromObject(2));
+        var state = vm.Execute();
+        Assert.IsTrue(state == ExecutionState.Halt);
+
+        var result = vm.Stack.Pop().AsNumber();
+        Assert.IsTrue(result == 32, $"{result} == 32");
+    }
+
+    [Test]
+    public void MathPowNumberNegative()
+    {
+        var sourceCode =
+            @"
+contract test{
+    import Math;
+    public power(a:number, b:number):number {
+        return Math.pow(a, b);
+    }
+}";
+
+        var parser = new TombLangCompiler();
+        var contract = parser.Process(sourceCode).First();
+
+        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+
+        TestVM vm;
+
+        // call increment
+        var calculate = contract.abi.FindMethod("power");
+        Assert.IsNotNull(calculate);
+
+        vm = new TestVM(contract, storage, calculate);
+        vm.Stack.Push(VMObject.FromObject(5));
+        vm.Stack.Push(VMObject.FromObject(-2));
+        var state = vm.Execute();
+        Assert.IsTrue(state == ExecutionState.Halt);
+
+        var result = vm.Stack.Pop().AsNumber();
+        Assert.IsTrue(result == -32, $"{result} == 32");
+    }
+
+    [Test]
+    public void MathPowNegative()
+    {
+        var sourceCode =
+            @"
+contract test{
+    import Math;
+    public power(a:number, b:number):number {
+        return Math.pow(a, b);
+    }
+}";
+
+        var parser = new TombLangCompiler();
+        var contract = parser.Process(sourceCode).First();
+
+        var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+
+        TestVM vm;
+
+        // call increment
+        var calculate = contract.abi.FindMethod("power");
+        Assert.IsNotNull(calculate);
+
+        vm = new TestVM(contract, storage, calculate);
+        vm.Stack.Push(VMObject.FromObject(-5));
+        vm.Stack.Push(VMObject.FromObject(-2));
+        try
+        {
+            var state = vm.Execute();
+            Assert.IsTrue(state == ExecutionState.Halt);
+            var result = vm.Stack.Pop().AsNumber();
+            Assert.IsTrue(result == 32, $"{result} == 32");
+        }
+        catch(Exception e)
+        {
+            Assert.IsTrue(e.Message.Contains("exponent", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Test]
     public void UpdateNumberMethod()
     {
         string[] sourceCode = new string[]
@@ -157,7 +262,7 @@ contract test{
 
         Assert.IsTrue(newVal == expectedVal);
     }
-    
+
     [Test]
     public void RandomNumber()
     {
@@ -175,7 +280,7 @@ contract test {
 	public mutateState():number
 	{
         // use the current transaction hash to provide a random seed. This makes the result deterministic during node consensus
-        // 	optionally we can use other value, depending on your needs, eg: Random.seed(16676869); 
+        // 	optionally we can use other value, depending on your needs, eg: Random.seed(16676869);
         local tx_hash:hash = Runtime.transactionHash();
         local mySeed:number = tx_hash.toNumber();
 		Random.seed(mySeed);

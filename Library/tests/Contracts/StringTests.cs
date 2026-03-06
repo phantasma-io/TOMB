@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using PhantasmaPhoenix.Cryptography;
-using PhantasmaPhoenix.Protocol;
 using Phantasma.Core.Domain.Contract;
+using PhantasmaPhoenix.Protocol;
 using PhantasmaPhoenix.VM;
 using PhantasmaPhoenix.Core;
 using Phantasma.Tomb.Compilers;
@@ -137,40 +137,40 @@ public class StringTests
 contract arrays {
     import Array;
 
-	public test(s:string, idx:number):string {        
-		local my_array: array<number>;		
-		my_array = s.toArray();	
+	public test(s:string, idx:number):string {
+		local my_array: array<number>;
+		my_array = s.toArray();
         my_array[idx] = 42; // replace char in this index with an asterisk (ascii table 42)
-		local result:string = String.fromArray(my_array);		
+		local result:string = String.fromArray(my_array);
 		return result;
-	}	
+	}
 
-	public toUpper(s:string):string 
-	{        
-		local my_array: array<number>;		
-		
+	public toUpper(s:string):string
+	{
+		local my_array: array<number>;
+
 		// extract chars from string into an array
-		my_array = s.toArray();	
-		
+		my_array = s.toArray();
+
 		local length :number = Array.length(my_array);
 		local idx :number = 0;
-		
+
 		while (idx < length) {
 			local ch : number = my_array[idx];
-			
+
 			if (ch >= 97) {
-				if (ch <= 122) {				
-					my_array[idx] = ch - 32; 
+				if (ch <= 122) {
+					my_array[idx] = ch - 32;
 				}
 			}
-						
+
 			idx += 1;
 		}
-				
+
 		// convert the array back into a unicode string
-		local result:string = String.fromArray(my_array); 
+		local result:string = String.fromArray(my_array);
 		return result;
-	}	
+	}
 
 }
 ";
@@ -204,5 +204,41 @@ contract arrays {
 
         result = vm.Stack.Pop().AsString();
         Assert.IsTrue(result == "ABCD");
+    }
+
+
+    [Test]
+    public void StringParameters()
+    {
+	    var sourceCode = @"
+contract handlerstring {
+	import String;
+
+	public joinStrings(s:string, idx:number, k:string, y:string):string {
+		return s + k + y + idx;
+	}
+}
+";
+
+	    var parser = new TombLangCompiler();
+	    var contract = parser.Process(sourceCode).First();
+
+	    var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+
+	    TestVM vm;
+
+	    var test = contract.abi.FindMethod("joinStrings");
+	    Assert.IsNotNull(test);
+
+	    vm = new TestVM(contract, storage, test);
+	    vm.Stack.Push(VMObject.FromObject("IJKL"));
+	    vm.Stack.Push(VMObject.FromObject("EFGH"));
+	    vm.Stack.Push(VMObject.FromObject(2));
+	    vm.Stack.Push(VMObject.FromObject("ABCD"));
+	    var state = vm.Execute();
+	    Assert.IsTrue(state == ExecutionState.Halt);
+
+	    var result = vm.Stack.Pop().AsString();
+	    Assert.AreEqual("ABCDEFGHIJKL2", result );
     }
 }
