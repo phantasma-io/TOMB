@@ -1,5 +1,6 @@
 using Phantasma.Tomb.AST;
 using Phantasma.Tomb.AST.Declarations;
+using Phantasma.Tomb.CodeGen;
 using Phantasma.Tomb.Lexers;
 
 namespace TOMBLib.Tests.AST.Declaration;
@@ -9,14 +10,20 @@ public class VarDeclarationTests
 	[SetUp]
 	public void Setup()
 	{
-		TombLangLexer lexer = new TombLangLexer();
+		_ = new TombLangLexer();
+	}
+
+	private static Scope CreateScope(string moduleName = "test")
+	{
+		var module = new Contract(moduleName, ModuleKind.Contract);
+		return new Scope(module);
 	}
 
 	[Test]
 	public void Constructor_WithValidArguments_SetsPropertiesCorrectly()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myVar";
 		var type = VarType.Find(VarKind.Any);
 		var storage = VarStorage.Global;
@@ -36,7 +43,7 @@ public class VarDeclarationTests
 	public void ToString_WithValidVarDeclaration_ReturnsExpectedString()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myVar";
 		var type = VarType.Find(VarKind.Bool);
 		var storage = VarStorage.Local;
@@ -53,7 +60,7 @@ public class VarDeclarationTests
 	public void Visit_WithCallback_CallsCallbackWithThisNode()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myVar";
 		var type = VarType.Find(VarKind.Decimal, 2);
 		var storage = VarStorage.Register;
@@ -71,7 +78,7 @@ public class VarDeclarationTests
 	public void IsNodeUsed_WithSameNode_ReturnsTrue()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myVar";
 		var type = VarType.Find(VarKind.String);
 		var storage = VarStorage.Global;

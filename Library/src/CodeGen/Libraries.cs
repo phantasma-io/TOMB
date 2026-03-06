@@ -882,7 +882,7 @@ namespace Phantasma.Tomb.CodeGen
 
 					return libDecl;
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					throw new CompilerException("unable to load library: " + libraryFileName);
 				}

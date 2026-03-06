@@ -12,14 +12,20 @@ public class LibraryDeclarationTests
 	[SetUp]
 	public void Setup()
 	{
-		TombLangLexer lexer = new TombLangLexer();
+		_ = new TombLangLexer();
+	}
+
+	private static Scope CreateScope(string moduleName = "test")
+	{
+		var module = new Contract(moduleName, ModuleKind.Contract);
+		return new Scope(module);
 	}
 
 	[Test]
 	public void Constructor_WithValidArguments_SetsPropertiesCorrectly()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 
 		// Act
@@ -36,7 +42,7 @@ public class LibraryDeclarationTests
 	public void AddMethod_WithValidArguments_AddsMethodToMethodsDictionary()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
 
@@ -64,7 +70,7 @@ public class LibraryDeclarationTests
 	public void FindMethod_WithExistingMethod_ReturnsMethodInterface()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
 		var method = libraryDeclaration.AddMethod("myMethod", MethodImplementationType.ExtCall, VarKind.None,
@@ -81,7 +87,7 @@ public class LibraryDeclarationTests
 	public void FindMethod_WithNonExistingMethod_ThrowsCompilerException()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
 
@@ -93,7 +99,7 @@ public class LibraryDeclarationTests
 	public void IsNodeUsed_WithSameNode_ReturnsTrue()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
 
@@ -108,7 +114,7 @@ public class LibraryDeclarationTests
 	public void Visit_WithCallback_CallsCallbackWithThisNode()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
 		bool isCallbackCalled = false;
@@ -124,7 +130,7 @@ public class LibraryDeclarationTests
 	public void MakeGenericLib_WithValidArguments_ReturnsGenericLibraryDeclaration()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
 		var generics = new[] { VarType.Find(VarKind.Number), VarType.Find(VarKind.String) };
@@ -144,10 +150,10 @@ public class LibraryDeclarationTests
 	public void PatchMap_WithMapDeclaration_ReturnsGenericLibraryDeclarationWithKeyAndValueTypesAsGenerics()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
-		var mapDecl = new MapDeclaration(null, "myMap", VarType.Find(VarKind.Number), VarType.Find(VarKind.String));
+		var mapDecl = new MapDeclaration(parentScope, "myMap", VarType.Find(VarKind.Number), VarType.Find(VarKind.String));
 
 		// Act
 		var patchedLib = libraryDeclaration.PatchMap(mapDecl);
@@ -164,10 +170,10 @@ public class LibraryDeclarationTests
 	public void PatchList_WithListDeclaration_ReturnsGenericLibraryDeclarationWithValueTypeAsGeneric()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
-		var listDecl = new ListDeclaration(null, "myList", VarType.Find(VarKind.Decimal, 2));
+		var listDecl = new ListDeclaration(parentScope, "myList", VarType.Find(VarKind.Decimal, 2));
 
 		// Act
 		var patchedLib = libraryDeclaration.PatchList(listDecl);
@@ -184,10 +190,10 @@ public class LibraryDeclarationTests
 	public void PatchSet_WithSetDeclaration_ReturnsGenericLibraryDeclarationWithValueTypeAsGeneric()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
-		var setDecl = new SetDeclaration(null, "mySet", VarType.Find(VarKind.String));
+		var setDecl = new SetDeclaration(parentScope, "mySet", VarType.Find(VarKind.String));
 
 		// Act
 		var patchedLib = libraryDeclaration.PatchSet(setDecl);
@@ -204,7 +210,7 @@ public class LibraryDeclarationTests
 	public void GenerateCode_DoesNothing()
 	{
 		// Arrange
-		Scope parentScope = null;
+		var parentScope = CreateScope();
 		var name = "myLibrary";
 		var libraryDeclaration = new LibraryDeclaration(parentScope, name);
 		var output = new CodeGenerator();

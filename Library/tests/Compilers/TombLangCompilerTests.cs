@@ -129,8 +129,8 @@ contract test {
 }";
 
 	private NativeCheckMode _originalMode;
-	private Action<string> _originalWarningHandler = null!;
-	private List<string> _warnings = null!;
+	private Action<string> _originalWarningHandler = static _ => { };
+	private List<string> _warnings = new();
 
 	private static readonly (Type Type, string Contract)[] PlaceholderContracts =
 	{
@@ -161,6 +161,17 @@ contract test {
 		Compiler.WarningHandler = _originalWarningHandler;
 	}
 
+	private static CompilerException ExpectCompilerException(TestDelegate code)
+	{
+		var exception = Assert.Throws<CompilerException>(code);
+		if (exception is null)
+		{
+			throw new AssertionException("Expected CompilerException, but no exception was captured.");
+		}
+
+		return exception;
+	}
+
 	[Test]
 	public void UnsupportedNativeMethod_DefaultErrorMode_Throws()
 	{
@@ -168,10 +179,9 @@ contract test {
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
 		var parser = new TombLangCompiler();
 
-		var ex = Assert.Throws<CompilerException>(() => parser.Process(UnsupportedAccountContract));
+		var ex = ExpectCompilerException(() => parser.Process(UnsupportedAccountContract));
 
-		Assert.That(ex, Is.Not.Null);
-		Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
+		Assert.That(ex.Message, Does.Contain("account.RegisterName"));
 		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
 	}
 
@@ -271,10 +281,9 @@ contract test {
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
 		var parser = new TombLangCompiler();
 
-		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicUnsupportedAccountMethodContract));
+		var ex = ExpectCompilerException(() => parser.Process(DynamicUnsupportedAccountMethodContract));
 
-		Assert.That(ex, Is.Not.Null);
-		Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
+		Assert.That(ex.Message, Does.Contain("account.RegisterName"));
 		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
 	}
 
@@ -298,10 +307,9 @@ contract test {
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
 		var parser = new TombLangCompiler();
 
-		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicNonLiteralTargetContract));
+		var ex = ExpectCompilerException(() => parser.Process(DynamicNonLiteralTargetContract));
 
-		Assert.That(ex, Is.Not.Null);
-		Assert.That(ex!.Message, Does.Contain("is not a literal contract/method pair"));
+		Assert.That(ex.Message, Does.Contain("is not a literal contract/method pair"));
 		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
 	}
 
@@ -312,10 +320,9 @@ contract test {
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
 		var parser = new TombLangCompiler();
 
-		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicUnsupportedAccountMethodViaContractLibrary));
+		var ex = ExpectCompilerException(() => parser.Process(DynamicUnsupportedAccountMethodViaContractLibrary));
 
-		Assert.That(ex, Is.Not.Null);
-		Assert.That(ex!.Message, Does.Contain("account.RegisterName"));
+		Assert.That(ex.Message, Does.Contain("account.RegisterName"));
 		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
 	}
 
@@ -340,10 +347,9 @@ contract test {
 		Compiler.NativeCheckMode = NativeCheckMode.Warn;
 		var parser = new TombLangCompiler();
 
-		var ex = Assert.Throws<CompilerException>(() => parser.Process(DynamicNonLiteralTargetViaContractLibrary));
+		var ex = ExpectCompilerException(() => parser.Process(DynamicNonLiteralTargetViaContractLibrary));
 
-		Assert.That(ex, Is.Not.Null);
-		Assert.That(ex!.Message, Does.Contain("can't be converted to String literal"));
+		Assert.That(ex.Message, Does.Contain("can't be converted to String literal"));
 		Assert.That(_warnings.Count, Is.EqualTo(1));
 		Assert.That(_warnings[0], Does.Contain("Contract.call"));
 		Assert.That(_warnings[0], Does.Contain("is not a literal contract/method pair"));

@@ -251,7 +251,7 @@ namespace Phantasma.Tomb.CodeGen
 			{
 				script = AssemblerUtils.BuildScript(lines, this.Name, out temp, out labels);
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				var outputFile = Path.Combine(Directory.GetCurrentDirectory(), "output.asm");
 				System.IO.File.WriteAllText(outputFile, string.Join('\n', lines));
