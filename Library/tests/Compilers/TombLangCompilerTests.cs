@@ -1,8 +1,12 @@
 namespace TOMBLib.Tests.Compilers;
 
+using System.Linq;
 using Phantasma.Tomb;
+using Phantasma.Tomb.AST;
+using Phantasma.Tomb.AST.Declarations;
 using Phantasma.Tomb.Compilers;
 using Phantasma.Tomb.Validation;
+using Phantasma.Tomb.CodeGen;
 using Phantasma.Business.Blockchain.Contracts.Native;
 
 public class TombLangCompilerTests
@@ -241,6 +245,42 @@ contract test {
 		(typeof(StakeContract), "stake"),
 		(typeof(StorageContract), "storage"),
 	};
+
+	private static bool IsDynamicNativeGateway(MethodInterface method)
+	{
+		return (string.Equals(method.Library.Name, "Call", StringComparison.Ordinal) &&
+				string.Equals(method.Name, "contract", StringComparison.Ordinal)) ||
+			   (string.Equals(method.Library.Name, "Contract", StringComparison.Ordinal) &&
+				string.Equals(method.Name, "call", StringComparison.Ordinal));
+	}
+
+	private static bool IsDynamicInteropGateway(MethodInterface method)
+	{
+		return string.Equals(method.Library.Name, "Call", StringComparison.Ordinal) &&
+			   string.Equals(method.Name, "interop", StringComparison.Ordinal);
+	}
+
+	private static IEnumerable<LibraryDeclaration> LoadContractLibrariesForCoverage()
+	{
+		var module = new Script("snapshot_coverage", ModuleKind.Contract);
+		var names = Module.AvailableLibraries.Distinct(StringComparer.Ordinal);
+
+		foreach (var name in names)
+		{
+			LibraryDeclaration lib;
+			try
+			{
+				lib = Module.LoadLibrary(name, module.Scope, module.Kind);
+			}
+			catch (CompilerException ex) when (ex.Message.Contains("unknown library:", StringComparison.Ordinal))
+			{
+				// Some available names are module-kind specific (for example Format for Description modules).
+				continue;
+			}
+
+			yield return lib;
+		}
+	}
 
 	[SetUp]
 	public void SetUp()
@@ -503,6 +543,75 @@ contract test {
 
 		Assert.That(missingStatuses, Is.Empty,
 			"Native snapshot is incomplete. Missing entries: " + string.Join(", ", missingStatuses));
+	}
+
+	[Test]
+	public void Snapshot_CoversAllContractCallAliases_FromContractLibraries()
+	{
+		// Every static ContractCall alias exposed to regular contract modules must be explicitly
+		// represented in the native snapshot table. Dynamic gateways are validated by literal
+		// target resolution at compile time and are checked separately.
+		var missingStatuses = new List<string>();
+
+		foreach (var lib in LoadContractLibrariesForCoverage())
+		{
+			foreach (var method in lib.methods.Values)
+			{
+				if (method.Implementation != MethodImplementationType.ContractCall)
+				{
+					continue;
+				}
+
+				if (IsDynamicNativeGateway(method))
+				{
+					continue;
+				}
+
+				if (string.IsNullOrWhiteSpace(method.Contract) ||
+					string.IsNullOrWhiteSpace(method.Alias) ||
+					!NativeMethodAvailability.TryGetSnapshotStatus(method.Contract, method.Alias, out _))
+				{
+					missingStatuses.Add($"{method.Library.Name}.{method.Name} -> {method.Contract}.{method.Alias}");
+				}
+			}
+		}
+
+		Assert.That(missingStatuses, Is.Empty,
+			"Native snapshot is missing contract-call alias entries: " + string.Join(", ", missingStatuses));
+	}
+
+	[Test]
+	public void Snapshot_CoversAllExtCallAliases_FromContractLibraries()
+	{
+		// Every static ExtCall alias exposed to regular contract modules must be explicitly
+		// represented in the interop snapshot table. Dynamic Call.interop(...) is validated by
+		// literal-method checks and does not have a fixed alias entry.
+		var missingStatuses = new List<string>();
+
+		foreach (var lib in LoadContractLibrariesForCoverage())
+		{
+			foreach (var method in lib.methods.Values)
+			{
+				if (method.Implementation != MethodImplementationType.ExtCall)
+				{
+					continue;
+				}
+
+				if (IsDynamicInteropGateway(method))
+				{
+					continue;
+				}
+
+				if (string.IsNullOrWhiteSpace(method.Alias) ||
+					!InteropMethodAvailability.TryGetSnapshotStatus(method.Alias, out _))
+				{
+					missingStatuses.Add($"{method.Library.Name}.{method.Name} -> {method.Alias}");
+				}
+			}
+		}
+
+		Assert.That(missingStatuses, Is.Empty,
+			"Interop snapshot is missing extcall alias entries: " + string.Join(", ", missingStatuses));
 	}
 
 	[Test]

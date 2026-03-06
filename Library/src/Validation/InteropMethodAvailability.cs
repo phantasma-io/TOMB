@@ -214,6 +214,9 @@ public static class InteropMethodAvailability
 			["Runtime.KillContract"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.KillContract case currently routes to runtime error (goto error)"),
+			["Runtime.ContractExists"] = new NativeMethodSnapshotEntry(
+				NativeMethodPresence.Missing,
+				$"{sourceFile} has no Runtime.ContractExists switch case"),
 			["Runtime.GetBalance"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.GetBalance case currently routes to runtime error (goto error)"),
