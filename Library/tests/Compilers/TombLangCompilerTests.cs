@@ -119,6 +119,15 @@ contract test {
     }
 }";
 
+    private const string TokenCreateRuntimeSignatureContract = @"
+contract test {
+    import Token;
+    public run(from:address)
+    {
+        Token.create(from, 0x00, 0x00);
+    }
+}";
+
     private NativeCheckMode _originalMode;
     private Action<string> _originalWarningHandler = null!;
     private List<string> _warnings = null!;
@@ -239,6 +248,18 @@ contract test {
         var parser = new TombLangCompiler();
 
         var modules = parser.Process(ForLoopScopeContract);
+
+        Assert.That(modules.Length, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void TokenCreate_UsesRuntimeThreeArgumentSignature()
+    {
+        // Regression guard for Nexus.CreateToken mapping: Token.create must use
+        // (from, script, abiBytes) to match runtime interop arity.
+        var parser = new TombLangCompiler();
+
+        var modules = parser.Process(TokenCreateRuntimeSignatureContract);
 
         Assert.That(modules.Length, Is.EqualTo(1));
     }

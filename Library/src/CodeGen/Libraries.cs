@@ -515,7 +515,9 @@ namespace Phantasma.Tomb.CodeGen
                     break;
 
                 case "Token":
-                    libDecl.AddMethod("create", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("symbol", VarKind.String), new MethodParameter("name", VarKind.String), new MethodParameter("maxSupply", VarKind.Number), new MethodParameter("decimals", VarKind.Number), new MethodParameter("flags", VarType.Find(VarKind.Enum, "TokenFlags")), new MethodParameter("script", VarKind.Bytes), new MethodParameter("abi", VarKind.Bytes) }).SetAlias("Nexus.CreateToken");
+                    // Nexus.CreateToken currently accepts (from, script, abiBytes) in the chain runtime.
+                    // Keeping this signature aligned avoids runtime CALL failures due to wrong argument count.
+                    libDecl.AddMethod("create", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("script", VarKind.Bytes), new MethodParameter("abiBytes", VarKind.Bytes) }).SetAlias("Nexus.CreateToken");
                     libDecl.AddMethod("exists", MethodImplementationType.ExtCall, VarKind.Bool, new[] { new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.TokenExists");
                     libDecl.AddMethod("getDecimals", MethodImplementationType.ExtCall, VarKind.Number, new[] { new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.GetTokenDecimals");
                     libDecl.AddMethod("getFlags", MethodImplementationType.ExtCall, VarType.Find(VarKind.Enum, "TokenFlag"), new[] { new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.GetTokenFlags");
