@@ -366,7 +366,9 @@ namespace Phantasma.Tomb
                             }
                         }
 
-                        if (sb.Length != 0 && char.IsDigit(ch))
+                        // Prevent a property accessor token (eg: "arr.length") from being
+                        // reclassified as numeric only because it currently contains a dot.
+                        if (sb.Length != 0 && char.IsDigit(ch) && CheckIfStringIsNumber(sb.ToString()))
                         {
                             insideNumber = true;
                         }
@@ -384,6 +386,45 @@ namespace Phantasma.Tomb
             }
 
             return tokens;
+        }
+
+        private static bool CheckIfStringIsNumber(string str)
+        {
+            var foundDot = false;
+
+            for (int i = 0; i < str.Length; i++)
+            {
+                var ch = str[i];
+                if (char.IsDigit(ch))
+                {
+                    continue;
+                }
+
+                if (ch == '.')
+                {
+                    if (i == 0 || foundDot)
+                    {
+                        return false;
+                    }
+
+                    foundDot = true;
+                    continue;
+                }
+
+                if (ch == '-')
+                {
+                    if (i > 0)
+                    {
+                        return false;
+                    }
+
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
         }
     }
 }

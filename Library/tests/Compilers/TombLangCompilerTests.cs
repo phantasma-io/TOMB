@@ -79,6 +79,16 @@ contract test {
     }
 }";
 
+private const string ArrayLengthPropertyContract = @"
+contract test {
+    import Array;
+    public run():number
+    {
+        local arr1: array<number> = {1};
+        return arr1.length();
+    }
+}";
+
     private NativeCheckMode _originalMode;
     private Action<string> _originalWarningHandler = null!;
     private List<string> _warnings = null!;
@@ -165,6 +175,19 @@ contract test {
 
         Assert.That(modules.Length, Is.EqualTo(1));
         Assert.That(_warnings, Is.Empty);
+    }
+
+    [Test]
+    public void ArrayLengthProperty_Compiles()
+    {
+        // Regression guard for lexer tokenization: arr.length() must stay a property call,
+        // not a malformed numeric token.
+        Compiler.NativeCheckMode = NativeCheckMode.Off;
+        var parser = new TombLangCompiler();
+
+        var modules = parser.Process(ArrayLengthPropertyContract);
+
+        Assert.That(modules.Length, Is.EqualTo(1));
     }
 
     [Test]
