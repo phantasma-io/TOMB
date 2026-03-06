@@ -107,14 +107,25 @@ public static class NativeMethodAvailability
 			contract = contract.ToLowerInvariant();
 		}
 
-		if (string.IsNullOrWhiteSpace(contract) || !Snapshot.TryGetValue(contract, out var contractMethods))
+		if (string.IsNullOrWhiteSpace(contract))
 		{
 			return false;
 		}
 
+		if (!Snapshot.TryGetValue(contract, out var contractMethods))
+		{
+			key = $"{contract}.{alias}";
+			message = $"native contract '{contract}' has no explicit status table in snapshot for chain commit {ChainBaselineCommit} " +
+					  $"(baseline date {ChainBaselineDate}); add contract-level method entries before compiling";
+			return true;
+		}
+
 		if (string.IsNullOrWhiteSpace(alias))
 		{
-			return false;
+			key = $"{contract}.<empty>";
+			message = $"native method alias is empty for contract '{contract}' in snapshot check for chain commit {ChainBaselineCommit} " +
+					  $"(baseline date {ChainBaselineDate}); assign a concrete method alias before compiling";
+			return true;
 		}
 
 		key = $"{contract}.{alias}";

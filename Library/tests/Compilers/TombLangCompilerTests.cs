@@ -43,6 +43,15 @@ contract test {
     }
 }";
 
+	private const string DynamicUnknownNativeContractMethodContract = @"
+contract test {
+    import Call;
+    public run(from:address)
+    {
+        Call.contract<none>(""customcontract"", ""DoStuff"", from);
+    }
+}";
+
 	private const string DynamicNonLiteralTargetContract = @"
 contract test {
     import Call;
@@ -126,9 +135,97 @@ contract test {
     {
         Token.create(from, 0x00, 0x00);
     }
+	}";
+
+	private const string StorageReadContract = @"
+contract test {
+    import Storage;
+    public run():number
+    {
+        return Storage.read<number>(""test"", ""counter"");
+    }
+}";
+
+	private const string StorageWriteContract = @"
+contract test {
+    import Storage;
+    public run()
+    {
+        Storage.write(""counter"", 1);
+    }
+}";
+
+	private const string MapGetContract = @"
+contract test {
+    import Map;
+    global _map: storage_map<number, number>;
+    public run():number
+    {
+        return _map.get(1);
+    }
+}";
+
+	private const string MapSetContract = @"
+contract test {
+    import Map;
+    global _map: storage_map<number, number>;
+    public run()
+    {
+        _map.set(1, 2);
+    }
+}";
+
+	private const string MapSetRepeatedContract = @"
+contract test {
+    import Map;
+    global _map: storage_map<number, number>;
+    public run()
+    {
+        _map.set(1, 2);
+        _map.set(2, 3);
+    }
+}";
+
+	private const string ListGetContract = @"
+contract test {
+    import List;
+    global _list: storage_list<number>;
+    public run():number
+    {
+        return _list.get(0);
+    }
+}";
+
+	private const string ListAddContract = @"
+contract test {
+    import List;
+    global _list: storage_list<number>;
+    public run()
+    {
+        _list.add(10);
+    }
+}";
+
+	private const string AddressIsNullContract = @"
+contract test {
+    import Address;
+    public run(target:address):bool
+    {
+        return Address.isNull(target);
+    }
+}";
+
+	private const string UnknownInteropAliasContract = @"
+contract test {
+    import Call;
+    public run()
+    {
+        Call.interop<none>(""Runtime.UnknownMethod"");
+    }
 }";
 
 	private NativeCheckMode _originalMode;
+	private NativeCheckMode _originalInteropMode;
 	private Action<string> _originalWarningHandler = static _ => { };
 	private List<string> _warnings = new();
 
@@ -149,6 +246,7 @@ contract test {
 	public void SetUp()
 	{
 		_originalMode = Compiler.NativeCheckMode;
+		_originalInteropMode = Compiler.InteropCheckMode;
 		_originalWarningHandler = Compiler.WarningHandler;
 		_warnings = new List<string>();
 		Compiler.WarningHandler = warning => _warnings.Add(warning);
@@ -158,6 +256,7 @@ contract test {
 	public void TearDown()
 	{
 		Compiler.NativeCheckMode = _originalMode;
+		Compiler.InteropCheckMode = _originalInteropMode;
 		Compiler.WarningHandler = _originalWarningHandler;
 	}
 
@@ -177,6 +276,7 @@ contract test {
 	{
 		// Default policy is strict: known-missing native methods must fail compilation.
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var ex = ExpectCompilerException(() => parser.Process(UnsupportedAccountContract));
@@ -190,6 +290,7 @@ contract test {
 	{
 		// Warn mode keeps compilation successful but emits one actionable warning per method.
 		Compiler.NativeCheckMode = NativeCheckMode.Warn;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var modules = parser.Process(UnsupportedAccountContract);
@@ -205,6 +306,7 @@ contract test {
 	{
 		// Off mode fully disables availability checks for workflows that need unrestricted emission.
 		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var modules = parser.Process(UnsupportedAccountContract);
@@ -218,6 +320,7 @@ contract test {
 	{
 		// Supported native methods should remain unaffected by strict error mode.
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var modules = parser.Process(SupportedStakeContract);
@@ -232,6 +335,7 @@ contract test {
 		// Regression guard for lexer tokenization: arr.length() must stay a property call,
 		// not a malformed numeric token.
 		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var modules = parser.Process(ArrayLengthPropertyContract);
@@ -279,6 +383,7 @@ contract test {
 	{
 		// Dynamic contract calls with literal native targets must be validated like direct wrappers.
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var ex = ExpectCompilerException(() => parser.Process(DynamicUnsupportedAccountMethodContract));
@@ -292,6 +397,7 @@ contract test {
 	{
 		// Literal dynamic calls to supported native methods should compile in strict mode.
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var modules = parser.Process(DynamicSupportedStakeMethodContract);
@@ -301,10 +407,25 @@ contract test {
 	}
 
 	[Test]
+	public void DynamicNativeMethod_ErrorMode_ThrowsForUnknownNativeContract()
+	{
+		// Fail-closed policy: dynamic native targets must map to a contract table in snapshot.
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
+		var parser = new TombLangCompiler();
+
+		var ex = ExpectCompilerException(() => parser.Process(DynamicUnknownNativeContractMethodContract));
+
+		Assert.That(ex.Message, Does.Contain("native contract 'customcontract' has no explicit status table"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
+
+	[Test]
 	public void DynamicNativeMethod_ErrorMode_ThrowsForNonLiteralTarget()
 	{
 		// Without literal target names the compiler cannot prove availability against the snapshot.
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var ex = ExpectCompilerException(() => parser.Process(DynamicNonLiteralTargetContract));
@@ -318,6 +439,7 @@ contract test {
 	{
 		// Contract.call(...) must be validated exactly like Call.contract(...).
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var ex = ExpectCompilerException(() => parser.Process(DynamicUnsupportedAccountMethodViaContractLibrary));
@@ -331,6 +453,7 @@ contract test {
 	{
 		// Supported native targets must remain usable through Contract.call(...).
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var modules = parser.Process(DynamicSupportedStakeMethodViaContractLibrary);
@@ -345,6 +468,7 @@ contract test {
 		// Warn mode still reports unresolved dynamic targets, but generation currently
 		// requires literal contract selectors for this gateway.
 		Compiler.NativeCheckMode = NativeCheckMode.Warn;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
 		var ex = ExpectCompilerException(() => parser.Process(DynamicNonLiteralTargetViaContractLibrary));
@@ -390,5 +514,147 @@ contract test {
 
 		Assert.That(NativeMethodAvailability.TryGetSnapshotStatus("stake", "GetMasterCount", out var masterCountEntry), Is.True);
 		Assert.That(masterCountEntry.Presence, Is.EqualTo(NativeMethodPresence.Missing));
+	}
+
+	[Test]
+	public void BasicInterop_MapGet_ErrorMode_CompilesWithoutWarning()
+	{
+		// Map.Get is currently implemented in Carbon interop and should compile in strict mode.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var modules = parser.Process(MapGetContract);
+
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
+
+	[Test]
+	public void BasicInterop_MapSet_ErrorMode_Throws()
+	{
+		// Map.Set currently routes to runtime error in Carbon and must be blocked at compile time.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var ex = ExpectCompilerException(() => parser.Process(MapSetContract));
+
+		Assert.That(ex.Message, Does.Contain("Map.Set"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
+
+	[Test]
+	public void BasicInterop_MapSet_WarnMode_CompilesAndWarnsOnce()
+	{
+		// Warn mode keeps emission enabled while reporting one deduplicated warning for Map.Set.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Warn;
+		var parser = new TombLangCompiler();
+
+		var modules = parser.Process(MapSetRepeatedContract);
+
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings.Count, Is.EqualTo(1));
+		Assert.That(_warnings[0], Does.Contain("Map.Set"));
+		Assert.That(_warnings[0], Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
+
+	[Test]
+	public void BasicInterop_StorageRead_ErrorMode_CompilesWithoutWarning()
+	{
+		// Data.Get is implemented in Carbon and underpins Storage.read.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var modules = parser.Process(StorageReadContract);
+
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
+
+	[Test]
+	public void BasicInterop_StorageWrite_ErrorMode_Throws()
+	{
+		// Data.Set currently routes to runtime error in Carbon and must be flagged at compile time.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var ex = ExpectCompilerException(() => parser.Process(StorageWriteContract));
+
+		Assert.That(ex.Message, Does.Contain("Data.Set"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
+
+	[Test]
+	public void BasicInterop_ListGet_ErrorMode_CompilesWithoutWarning()
+	{
+		// List.Get is currently implemented in Carbon interop and should remain usable.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var modules = parser.Process(ListGetContract);
+
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
+
+	[Test]
+	public void BasicInterop_ListAdd_ErrorMode_Throws()
+	{
+		// List.Add currently routes to runtime error in Carbon and must be blocked at compile time.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var ex = ExpectCompilerException(() => parser.Process(ListAddContract));
+
+		Assert.That(ex.Message, Does.Contain("List.Add"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
+
+	[Test]
+	public void BasicInterop_UnimplementedCustomMethod_ErrorMode_Throws()
+	{
+		// Methods without callbacks are placeholders that emit runtime THROW and must be rejected.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var ex = ExpectCompilerException(() => parser.Process(AddressIsNullContract));
+
+		Assert.That(ex.Message, Does.Contain("Address.isNull"));
+		Assert.That(ex.Message, Does.Contain("runtime THROW"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+	}
+
+	[Test]
+	public void BasicInterop_Snapshot_TracksMapGetAvailable_AndMapSetMissing()
+	{
+		// Spot-check storage interop snapshot semantics at the pinned chain baseline.
+		Assert.That(InteropMethodAvailability.TryGetSnapshotStatus("Map.Get", out var mapGetEntry), Is.True);
+		Assert.That(mapGetEntry.Presence, Is.EqualTo(NativeMethodPresence.Available));
+
+		Assert.That(InteropMethodAvailability.TryGetSnapshotStatus("Map.Set", out var mapSetEntry), Is.True);
+		Assert.That(mapSetEntry.Presence, Is.EqualTo(NativeMethodPresence.Missing));
+	}
+
+	[Test]
+	public void BasicInterop_StrictMode_FailClosed_WhenAliasMissingFromSnapshot()
+	{
+		// Fail-closed policy: even methods not yet classified must be rejected in strict mode
+		// until the snapshot gets an explicit Available/Missing entry.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var ex = ExpectCompilerException(() => parser.Process(UnknownInteropAliasContract));
+
+		Assert.That(ex.Message, Does.Contain("Runtime.UnknownMethod"));
+		Assert.That(ex.Message, Does.Contain("no explicit status"));
+		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
 	}
 }

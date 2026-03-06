@@ -30,6 +30,9 @@ namespace Phantasma.Tomb
 											  // Runtime availability checks for native-contract calls are enabled by default to prevent
 											  // generating bytecode that is known to fail against the current Carbon runtime baseline.
 		public static NativeCheckMode NativeCheckMode { get; set; } = NativeCheckMode.Error;
+		// Interop availability checks are CLI-driven and intentionally disabled by default
+		// for library-level unit tests that validate parser/codegen behavior in isolation.
+		public static NativeCheckMode InteropCheckMode { get; set; } = NativeCheckMode.Off;
 		public static Action<string> WarningHandler { get; set; } = warning => Console.WriteLine(warning);
 
 		public readonly int TargetProtocolVersion;
@@ -107,6 +110,7 @@ namespace Phantasma.Tomb
 
 			// Reset deduplicated native-check warnings for each compilation run.
 			NativeMethodAvailability.ResetSession();
+			InteropMethodAvailability.ResetSession();
 
 			this.tokens = Lexer.Process(sourceCode);
 

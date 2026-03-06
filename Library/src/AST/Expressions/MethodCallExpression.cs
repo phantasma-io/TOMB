@@ -137,6 +137,7 @@ namespace Phantasma.Tomb.AST.Expressions
 			// Validate native-contract availability before emitting call opcodes so the
 			// failure mode is explicit at compile time instead of surfacing only at runtime.
 			NativeMethodAvailability.ValidateOrReport(this, targetMethod, Compiler.NativeCheckMode);
+			InteropMethodAvailability.ValidateOrReport(this, targetMethod, Compiler.InteropCheckMode);
 
 			Register? reg;
 

@@ -235,6 +235,10 @@ namespace Phantasma.Tomb
 				}
 			}
 
+			// CLI uses one strictness knob for both native-contract and foundational
+			// interop availability checks to keep diagnostics mode selection simple.
+			Compiler.InteropCheckMode = Compiler.NativeCheckMode;
+
 			bool compilingBuiltins = false;
 
 #if DEBUG
