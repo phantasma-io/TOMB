@@ -14,8 +14,6 @@ public class ArrayTests
 	[Test]
 	public void StringArray()
 	{
-		var str = "hello";
-
 		var sourceCode =
 			@"contract test{
     public getStrings(): array<string> {

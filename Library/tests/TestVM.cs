@@ -16,14 +16,15 @@ public class TestVM : VirtualMachine
 	public IEnumerable<Event> Events => _events;
 	private readonly List<Event> _events = new List<Event>();
 
-	private Module module;
+	private readonly Module module;
 
-	private Dictionary<string, Func<VirtualMachine, ExecutionState>> _interops =
+	private readonly Dictionary<string, Func<VirtualMachine, ExecutionState>> _interops =
 		new Dictionary<string, Func<VirtualMachine, ExecutionState>>();
 
-	private Func<string, VmExecutionContext> _contextLoader;
-	private Dictionary<string, VmExecutionContext> contexts;
-	private Dictionary<byte[], byte[]> storage;
+	private Func<string, VmExecutionContext> _contextLoader = _ =>
+		throw new InvalidOperationException("Context loader is not configured.");
+	private readonly Dictionary<string, VmExecutionContext> contexts;
+	private readonly Dictionary<byte[], byte[]> storage;
 
 	public TestVM(Module module, Dictionary<byte[], byte[]> storage, ContractMethod method) : base(module.script,
 		(uint)method.offset, module.Name)
@@ -54,37 +55,34 @@ public class TestVM : VirtualMachine
 
 	private VmExecutionContext ContextLoader(string contextName)
 	{
-		if (contexts.ContainsKey(contextName))
-			return contexts[contextName];
+		if (contexts.TryGetValue(contextName, out var context))
+		{
+			return context;
+		}
 
-		return null;
+		throw new VMException(this, $"unknown context: {contextName}");
 	}
 
 	public byte[] BuildScript(string[] lines)
 	{
-		IEnumerable<Semanteme> semantemes = null;
 		try
 		{
-			semantemes = Semanteme.ProcessLines(lines);
+			_ = Semanteme.ProcessLines(lines);
 		}
-		catch (Exception e)
+		catch (Exception ex)
 		{
-			throw new Exception("Error parsing the script");
+			throw new Exception("Error parsing the script", ex);
 		}
 
 		var sb = new ScriptBuilder();
-		byte[] script = null;
-
 		try
 		{
-			script = sb.ToScript();
+			return sb.ToScript();
 		}
-		catch (Exception e)
+		catch (Exception ex)
 		{
-			throw new Exception("Error assembling the script");
+			throw new Exception("Error assembling the script", ex);
 		}
-
-		return script;
 	}
 
 	public void RegisterMethod(string method, Func<VirtualMachine, ExecutionState> callback)
@@ -94,7 +92,7 @@ public class TestVM : VirtualMachine
 
 	public void RegisterContextLoader(Func<string, VmExecutionContext> callback)
 	{
-		_contextLoader = callback;
+		_contextLoader = callback ?? throw new ArgumentNullException(nameof(callback));
 	}
 
 	public override ExecutionState ExecuteInterop(string method)
@@ -109,12 +107,7 @@ public class TestVM : VirtualMachine
 
 	public override VmExecutionContext LoadContext(string contextName)
 	{
-		if (_contextLoader != null)
-		{
-			return _contextLoader(contextName);
-		}
-
-		throw new VMException(this, $"unknown context: {contextName}");
+		return _contextLoader(contextName);
 	}
 
 	public override void DumpData(List<string> lines)

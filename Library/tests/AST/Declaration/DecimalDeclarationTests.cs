@@ -11,7 +11,7 @@ public class DecimalDeclarationTests
 	[SetUp]
 	public void Setup()
 	{
-		TombLangLexer lexer = new TombLangLexer();
+		_ = new TombLangLexer();
 	}
 
 	[Test]
@@ -23,7 +23,6 @@ public class DecimalDeclarationTests
 		var name = "myDecimal";
 		var type = VarType.Find(VarKind.Decimal, 2);
 		var storage = VarStorage.Local;
-		var value = "3.12";
 		var decimals = 2;
 
 		// Act

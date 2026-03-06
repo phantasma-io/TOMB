@@ -266,8 +266,6 @@ contract test{
 	[Test]
 	public void RandomNumber()
 	{
-		var str = "hello";
-
 		var sourceCode =
 			@"
 contract test {
