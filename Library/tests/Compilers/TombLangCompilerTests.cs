@@ -79,13 +79,28 @@ contract test {
     }
 }";
 
-private const string ArrayLengthPropertyContract = @"
+    private const string ArrayLengthPropertyContract = @"
 contract test {
     import Array;
     public run():number
     {
         local arr1: array<number> = {1};
         return arr1.length();
+    }
+}";
+
+    private const string StructConstructorAfterImportContract = @"
+struct MyLocalStruct {
+    name:string;
+    age:number;
+}
+
+contract test{
+    import Struct;
+    public run(name:string, age:number):MyLocalStruct {
+        local myStruct:MyLocalStruct = Struct.MyLocalStruct(name, age);
+        myStruct.age = 20;
+        return myStruct;
     }
 }";
 
@@ -186,6 +201,17 @@ contract test {
         var parser = new TombLangCompiler();
 
         var modules = parser.Process(ArrayLengthPropertyContract);
+
+        Assert.That(modules.Length, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void StructConstructorAfterImport_Compiles()
+    {
+        // Importing Struct must preserve generated constructors like Struct.MyLocalStruct(...).
+        var parser = new TombLangCompiler();
+
+        var modules = parser.Process(StructConstructorAfterImportContract);
 
         Assert.That(modules.Length, Is.EqualTo(1));
     }

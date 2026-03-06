@@ -430,8 +430,14 @@ namespace Phantasma.Tomb.Compilers
                                 }
                             } while (true);
 
-                            var libDecl = Contract.LoadLibrary(libName, module.Scope, module.Kind);
-                            module.Libraries[libName] = libDecl;
+                            // Keep already-initialized libraries (notably Struct with generated
+                            // constructor methods) instead of replacing them on import.
+                            var libDecl = module.FindLibrary(libName, false);
+                            if (libDecl == null)
+                            {
+                                libDecl = Contract.LoadLibrary(libName, module.Scope, module.Kind);
+                                module.Libraries[libName] = libDecl;
+                            }
 
                             break;
                         }
@@ -1410,7 +1416,7 @@ namespace Phantasma.Tomb.Compilers
 
                                         var assignment = new AssignStatement();
                                         assignment.variable = varDecl;
-                                        assignment.keyExpression = new LiteralExpression(scope, "\"" + fieldName + "\"" , fieldDecl.type);
+                                        assignment.keyExpression = new LiteralExpression(scope, "\"" + fieldName + "\"", VarType.Find(VarKind.String));
                                         assignment.valueExpression = ParseAssignmentExpression(scope, next.value, varDecl, fieldDecl.type);
                                         block.Commands.Add(assignment);
                                     }
