@@ -640,23 +640,23 @@ contract test {
 	}
 
 	[Test]
-	public void BasicInterop_MapSet_ErrorMode_Throws()
+	public void BasicInterop_MapSet_ErrorMode_CompilesWithoutWarning()
 	{
-		// Map.Set currently routes to runtime error in Carbon and must be blocked at compile time.
+		// Map.Set is live in the current chain baseline and should compile cleanly in strict mode.
 		Compiler.NativeCheckMode = NativeCheckMode.Off;
 		Compiler.InteropCheckMode = NativeCheckMode.Error;
 		var parser = new TombLangCompiler();
 
-		var ex = ExpectCompilerException(() => parser.Process(MapSetContract));
+		var modules = parser.Process(MapSetContract);
 
-		Assert.That(ex.Message, Does.Contain("Map.Set"));
-		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
 	}
 
 	[Test]
-	public void BasicInterop_MapSet_WarnMode_CompilesAndWarnsOnce()
+	public void BasicInterop_MapSet_WarnMode_CompilesWithoutWarning()
 	{
-		// Warn mode keeps emission enabled while reporting one deduplicated warning for Map.Set.
+		// Warn mode should also stay silent once the snapshot marks Map.Set as available.
 		Compiler.NativeCheckMode = NativeCheckMode.Off;
 		Compiler.InteropCheckMode = NativeCheckMode.Warn;
 		var parser = new TombLangCompiler();
@@ -664,9 +664,7 @@ contract test {
 		var modules = parser.Process(MapSetRepeatedContract);
 
 		Assert.That(modules.Length, Is.EqualTo(1));
-		Assert.That(_warnings.Count, Is.EqualTo(1));
-		Assert.That(_warnings[0], Does.Contain("Map.Set"));
-		Assert.That(_warnings[0], Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+		Assert.That(_warnings, Is.Empty);
 	}
 
 	[Test]
@@ -684,17 +682,17 @@ contract test {
 	}
 
 	[Test]
-	public void BasicInterop_StorageWrite_ErrorMode_Throws()
+	public void BasicInterop_StorageWrite_ErrorMode_CompilesWithoutWarning()
 	{
-		// Data.Set currently routes to runtime error in Carbon and must be flagged at compile time.
+		// Data.Set underpins Storage.write and is implemented in the current chain baseline.
 		Compiler.NativeCheckMode = NativeCheckMode.Off;
 		Compiler.InteropCheckMode = NativeCheckMode.Error;
 		var parser = new TombLangCompiler();
 
-		var ex = ExpectCompilerException(() => parser.Process(StorageWriteContract));
+		var modules = parser.Process(StorageWriteContract);
 
-		Assert.That(ex.Message, Does.Contain("Data.Set"));
-		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
 	}
 
 	[Test]
@@ -712,17 +710,17 @@ contract test {
 	}
 
 	[Test]
-	public void BasicInterop_ListAdd_ErrorMode_Throws()
+	public void BasicInterop_ListAdd_ErrorMode_CompilesWithoutWarning()
 	{
-		// List.Add currently routes to runtime error in Carbon and must be blocked at compile time.
+		// List.Add is live in the current chain baseline and should remain available to contracts.
 		Compiler.NativeCheckMode = NativeCheckMode.Off;
 		Compiler.InteropCheckMode = NativeCheckMode.Error;
 		var parser = new TombLangCompiler();
 
-		var ex = ExpectCompilerException(() => parser.Process(ListAddContract));
+		var modules = parser.Process(ListAddContract);
 
-		Assert.That(ex.Message, Does.Contain("List.Add"));
-		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
 	}
 
 	[Test]
@@ -741,14 +739,15 @@ contract test {
 	}
 
 	[Test]
-	public void BasicInterop_Snapshot_TracksMapGetAvailable_AndMapSetMissing()
+	public void BasicInterop_Snapshot_TracksMapSetAvailable_AndTransactionHashMissing()
 	{
-		// Spot-check storage interop snapshot semantics at the pinned chain baseline.
-		Assert.That(InteropMethodAvailability.TryGetSnapshotStatus("Map.Get", out var mapGetEntry), Is.True);
-		Assert.That(mapGetEntry.Presence, Is.EqualTo(NativeMethodPresence.Available));
-
+		// Spot-check both sides of the updated snapshot: live storage writes are available,
+		// while still-unimplemented runtime helpers remain explicitly blocked.
 		Assert.That(InteropMethodAvailability.TryGetSnapshotStatus("Map.Set", out var mapSetEntry), Is.True);
-		Assert.That(mapSetEntry.Presence, Is.EqualTo(NativeMethodPresence.Missing));
+		Assert.That(mapSetEntry.Presence, Is.EqualTo(NativeMethodPresence.Available));
+
+		Assert.That(InteropMethodAvailability.TryGetSnapshotStatus("Runtime.TransactionHash", out var txHashEntry), Is.True);
+		Assert.That(txHashEntry.Presence, Is.EqualTo(NativeMethodPresence.Missing));
 	}
 
 	[Test]

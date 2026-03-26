@@ -164,26 +164,26 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.TransactionHash case currently routes to runtime error (goto error)"),
 			["Runtime.Time"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.Time case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.Time dispatch)"),
 			["Runtime.Version"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.Version case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.Version dispatch)"),
 			["Runtime.GasTarget"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.GasTarget case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GasTarget dispatch)"),
 			["Runtime.Validator"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.Validator case currently routes to runtime error (goto error)"),
 			["Runtime.Context"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.Context case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.Context dispatch)"),
 			["Runtime.PreviousContext"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.PreviousContext case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.PreviousContext dispatch)"),
 			["Runtime.GenerateUID"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.GenerateUID case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GenerateUID dispatch)"),
 			["Runtime.Random"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.Random case currently routes to runtime error (goto error)"),
@@ -191,20 +191,20 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.SetSeed case currently routes to runtime error (goto error)"),
 			["Runtime.IsWitness"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.IsWitness case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.IsWitness dispatch)"),
 			["Runtime.IsTrigger"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.IsTrigger case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.IsTrigger dispatch)"),
 			["Runtime.IsMinter"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.IsMinter case currently routes to runtime error (goto error)"),
 			["Runtime.Log"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.Log case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.Log dispatch)"),
 			["Runtime.Notify"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.Notify case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.Notify dispatch)"),
 			["Runtime.DeployContract"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.DeployContract dispatch)"),
@@ -218,17 +218,17 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Missing,
 				$"{sourceFile} has no Runtime.ContractExists switch case"),
 			["Runtime.GetBalance"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.GetBalance case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GetBalance dispatch)"),
 			["Runtime.TransferTokens"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.TransferTokens dispatch)"),
 			["Runtime.TransferBalance"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.TransferBalance case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.TransferBalance dispatch)"),
 			["Runtime.MintTokens"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.MintTokens case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.MintTokens dispatch)"),
 			["Runtime.BurnTokens"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.BurnTokens dispatch)"),
@@ -239,35 +239,35 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.TransferToken dispatch)"),
 			["Runtime.MintToken"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.MintToken case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.MintToken dispatch)"),
 			["Runtime.BurnToken"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.BurnToken case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.BurnToken dispatch)"),
 			["Runtime.InfuseToken"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.InfuseToken dispatch)"),
 			["Runtime.ReadTokenROM"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.ReadTokenROM case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.ReadTokenROM dispatch)"),
 			["Runtime.ReadTokenRAM"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.ReadTokenRAM case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.ReadTokenRAM dispatch)"),
 			["Runtime.ReadToken"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.ReadToken case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.ReadToken dispatch)"),
 			["Runtime.WriteToken"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.WriteToken case currently routes to runtime error (goto error)"),
 			["Runtime.TokenExists"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.TokenExists case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.TokenExists dispatch)"),
 			["Runtime.GetTokenDecimals"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.GetTokenDecimals case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GetTokenDecimals dispatch)"),
 			["Runtime.GetTokenFlags"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.GetTokenFlags case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GetTokenFlags dispatch)"),
 			["Runtime.AESDecrypt"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.AESDecrypt case currently routes to runtime error (goto error)"),
@@ -284,11 +284,11 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Missing,
 				$"{sourceFile} has no Runtime.GetAvailableNFTSymbols switch case"),
 			["Runtime.ReadInfusions"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} has no Runtime.ReadInfusions switch case"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.ReadInfusions dispatch)"),
 			["Runtime.GetOwnerships"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} has no Runtime.GetOwnerships switch case"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GetOwnerships dispatch)"),
 
 			["Nexus.CreateToken"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
@@ -306,8 +306,8 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Nexus.MigrateToken case currently routes to runtime error (goto error)"),
 			["Nexus.CreateTokenSeries"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Nexus.CreateTokenSeries case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Nexus.CreateTokenSeries dispatch)"),
 			["Nexus.CreateChain"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Nexus.CreateChain case currently routes to runtime error (goto error)"),
@@ -348,8 +348,8 @@ public static class InteropMethodAvailability
 				$"{sourceFile} Task.Current case currently routes to runtime error (goto error)"),
 
 			["Account.Name"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Account.Name case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Account.Name dispatch)"),
 			["Account.LastActivity"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Account.LastActivity case currently routes to runtime error (goto error)"),
@@ -384,52 +384,52 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Data.Get case reads contract variable)"),
 			["Data.Set"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Data.Set case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Data.Set case writes current-contract storage)"),
 			["Data.Delete"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Data.Delete case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Data.Delete case removes current-contract storage)"),
 
 			["Map.Has"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Map.Has case currently aborts with CarbonAssert(false)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Map.Has case checks contract table presence)"),
 			["Map.Get"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Map.Get case reads contract table entry)"),
 			["Map.Set"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Map.Set case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Map.Set case writes contract table entry)"),
 			["Map.Remove"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Map.Remove case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Map.Remove case deletes contract table entry)"),
 			["Map.Count"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Map.Count case currently aborts with CarbonAssert(false)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Map.Count case reads canonical table count)"),
 			["Map.Clear"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Map.Clear case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Map.Clear case deletes all contract table entries)"),
 			["Map.Keys"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Map.Keys case currently aborts with CarbonAssert(false)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Map.Keys case enumerates contract table keys)"),
 
 			["List.Get"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (List.Get case reads contract table entry by index)"),
 			["List.Add"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} List.Add case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (List.Add case appends list entry)"),
 			["List.Replace"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} List.Replace case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (List.Replace case rewrites list entry)"),
 			["List.RemoveAt"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} List.RemoveAt case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (List.RemoveAt case removes list entry)"),
 			["List.Count"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} List.Count case currently aborts with CarbonAssert(false)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (List.Count case reads canonical list count)"),
 			["List.Clear"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} List.Clear case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (List.Clear case deletes list entries)"),
 		};
 	}
 }
