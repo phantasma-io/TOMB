@@ -27,6 +27,8 @@ public static class NativeMethodAvailability
 
 	private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, NativeMethodSnapshotEntry>> Snapshot =
 		BuildSnapshot();
+	private static readonly IReadOnlySet<string> KnownRuntimeNativeContracts =
+		BuildKnownRuntimeNativeContracts();
 
 	// Warnings are deduplicated per method so the same issue is reported once per compile run.
 	private static readonly HashSet<string> EmittedWarnings = new(StringComparer.Ordinal);
@@ -104,7 +106,14 @@ public static class NativeMethodAvailability
 				return true;
 			}
 
-			contract = contract.ToLowerInvariant();
+			// Dynamic contract gateways can target either builtin lower-case runtime namespaces
+			// (stake/account/exchange/...) or regular deployed custom contracts/ticker contracts.
+			// Only the builtin namespace family should be validated against the native snapshot;
+			// literal custom targets like "SATRN" must not be rejected as if they were native.
+			if (!IsKnownRuntimeNativeContract(contract))
+			{
+				return false;
+			}
 		}
 
 		if (string.IsNullOrWhiteSpace(contract))
@@ -179,6 +188,11 @@ public static class NativeMethodAvailability
 		}
 
 		return !string.IsNullOrWhiteSpace(contract) && !string.IsNullOrWhiteSpace(methodName);
+	}
+
+	private static bool IsKnownRuntimeNativeContract(string contract)
+	{
+		return !string.IsNullOrWhiteSpace(contract) && KnownRuntimeNativeContracts.Contains(contract);
 	}
 
 	private static string NormalizeStringLiteral(string value)
@@ -336,6 +350,25 @@ public static class NativeMethodAvailability
 		};
 
 		return snapshot;
+	}
+
+	private static IReadOnlySet<string> BuildKnownRuntimeNativeContracts()
+	{
+		var contracts = new HashSet<string>(Snapshot.Keys, StringComparer.Ordinal)
+		{
+			"gas",
+			"block",
+			"swap",
+			"token",
+			"validator",
+			"consensus",
+			"interop",
+			"exchange",
+			"privacy",
+			"friends",
+		};
+
+		return contracts;
 	}
 
 	private static IReadOnlyDictionary<string, NativeMethodSnapshotEntry> CreateContractTable(string allMissingReason, IEnumerable<string> missingMethods)

@@ -47,12 +47,21 @@ contract test {
     }
 }";
 
-	private const string DynamicUnknownNativeContractMethodContract = @"
+	private const string DynamicCustomContractMethodContract = @"
 contract test {
     import Call;
     public run(from:address)
     {
         Call.contract<none>(""customcontract"", ""DoStuff"", from);
+    }
+}";
+
+	private const string DynamicMissingSnapshotBuiltinContractMethodContract = @"
+contract test {
+    import Call;
+    public run()
+    {
+        Call.contract<none>(""exchange"", ""Migrate"");
     }
 }";
 
@@ -447,16 +456,32 @@ contract test {
 	}
 
 	[Test]
-	public void DynamicNativeMethod_ErrorMode_ThrowsForUnknownNativeContract()
+	public void DynamicNativeMethod_ErrorMode_CompilesForLiteralCustomContractTarget()
 	{
-		// Fail-closed policy: dynamic native targets must map to a contract table in snapshot.
+		// Literal custom/token-backed contract targets are not builtin runtime namespaces
+		// and must not be blocked by the native snapshot checker.
 		Compiler.NativeCheckMode = NativeCheckMode.Error;
 		Compiler.InteropCheckMode = NativeCheckMode.Off;
 		var parser = new TombLangCompiler();
 
-		var ex = ExpectCompilerException(() => parser.Process(DynamicUnknownNativeContractMethodContract));
+		var modules = parser.Process(DynamicCustomContractMethodContract);
 
-		Assert.That(ex.Message, Does.Contain("native contract 'customcontract' has no explicit status table"));
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
+
+	[Test]
+	public void DynamicNativeMethod_ErrorMode_ThrowsForBuiltinContractWithoutSnapshot()
+	{
+		// Lower-case builtin runtime namespaces must stay fail-closed until they have an
+		// explicit native snapshot table. This preserves protection for exchange/swap/etc.
+		Compiler.NativeCheckMode = NativeCheckMode.Error;
+		Compiler.InteropCheckMode = NativeCheckMode.Off;
+		var parser = new TombLangCompiler();
+
+		var ex = ExpectCompilerException(() => parser.Process(DynamicMissingSnapshotBuiltinContractMethodContract));
+
+		Assert.That(ex.Message, Does.Contain("native contract 'exchange' has no explicit status table"));
 		Assert.That(ex.Message, Does.Contain(NativeMethodAvailability.ChainBaselineCommit));
 	}
 
