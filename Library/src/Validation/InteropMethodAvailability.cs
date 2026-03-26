@@ -268,6 +268,9 @@ public static class InteropMethodAvailability
 			["Runtime.GetTokenFlags"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.GetTokenFlags dispatch)"),
+			["Runtime.GetTokenOwner"] = new NativeMethodSnapshotEntry(
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GetTokenOwner dispatch)"),
 			["Runtime.AESDecrypt"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Missing,
 				$"{sourceFile} Runtime.AESDecrypt case currently routes to runtime error (goto error)"),

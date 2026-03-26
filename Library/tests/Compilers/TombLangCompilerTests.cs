@@ -219,6 +219,15 @@ contract test {
     }
 }";
 
+	private const string TokenGetOwnerContract = @"
+contract test {
+    import Token;
+    public run():address
+    {
+        return Token.getOwner(""SOUL"");
+    }
+}";
+
 	private const string AddressIsNullContract = @"
 contract test {
     import Address;
@@ -743,6 +752,20 @@ contract test {
 		var parser = new TombLangCompiler();
 
 		var modules = parser.Process(ListAddContract);
+
+		Assert.That(modules.Length, Is.EqualTo(1));
+		Assert.That(_warnings, Is.Empty);
+	}
+
+	[Test]
+	public void BasicInterop_TokenGetOwner_ErrorMode_CompilesWithoutWarning()
+	{
+		// Token.getOwner is a narrow read-only query and should compile cleanly in strict mode.
+		Compiler.NativeCheckMode = NativeCheckMode.Off;
+		Compiler.InteropCheckMode = NativeCheckMode.Error;
+		var parser = new TombLangCompiler();
+
+		var modules = parser.Process(TokenGetOwnerContract);
 
 		Assert.That(modules.Length, Is.EqualTo(1));
 		Assert.That(_warnings, Is.Empty);

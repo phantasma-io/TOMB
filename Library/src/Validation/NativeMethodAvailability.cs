@@ -22,7 +22,7 @@ public static class NativeMethodAvailability
 {
 	// Baseline commit used for method-by-method native runtime availability.
 	// Update this hash and the snapshot table together after reviewing a newer chain revision.
-	public const string ChainBaselineCommit = "d5944305736449aa417be5be8898e05bdb865dac";
+	public const string ChainBaselineCommit = "751f82eb857b04d1ce76ae6e18f2ed67273b6258";
 	public const string ChainBaselineDate = "2026-03-26";
 
 	private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, NativeMethodSnapshotEntry>> Snapshot =

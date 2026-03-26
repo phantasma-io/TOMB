@@ -13,6 +13,8 @@ namespace TOMBLib.Tests;
 
 public class TestVM : VirtualMachine
 {
+	public static Address GetTokenOwnerForSymbol(string symbol) => Address.FromHash($"token-owner:{symbol}");
+
 	public IEnumerable<Event> Events => _events;
 	private readonly List<Event> _events = new List<Event>();
 
@@ -46,6 +48,7 @@ public class TestVM : VirtualMachine
 		RegisterMethod("Runtime.Context", Runtime_Context);
 		RegisterMethod("Runtime.ReadInfusions", Runtime_ReadInfusions);
 		RegisterMethod("Runtime.GetOwnerships", Runtime_GetOwnerships);
+		RegisterMethod("Runtime.GetTokenOwner", Runtime_GetTokenOwner);
 		RegisterMethod("Runtime.Notify", Runtime_Notify);
 
 		RegisterMethod("Runtime.GetAvailableTokenSymbols", Runtime_GetAvailableTokenSymbols);
@@ -197,6 +200,15 @@ public class TestVM : VirtualMachine
 
 		var val = VMObject.FromArray(array);
 		this.Stack.Push(val);
+
+		return ExecutionState.Running;
+	}
+
+	private ExecutionState Runtime_GetTokenOwner(VirtualMachine vm)
+	{
+		var symbol = vm.PopString("symbol");
+		var owner = GetTokenOwnerForSymbol(symbol);
+		this.Stack.Push(VMObject.FromObject(owner));
 
 		return ExecutionState.Running;
 	}

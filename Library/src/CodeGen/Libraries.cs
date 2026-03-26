@@ -523,6 +523,9 @@ namespace Phantasma.Tomb.CodeGen
 					libDecl.AddMethod("exists", MethodImplementationType.ExtCall, VarKind.Bool, new[] { new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.TokenExists");
 					libDecl.AddMethod("getDecimals", MethodImplementationType.ExtCall, VarKind.Number, new[] { new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.GetTokenDecimals");
 					libDecl.AddMethod("getFlags", MethodImplementationType.ExtCall, VarType.Find(VarKind.Enum, "TokenFlag"), new[] { new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.GetTokenFlags");
+					// This is intentionally current owner only; the chain runtime does not persist a
+					// separate token-creator field that TOMB could safely expose here.
+					libDecl.AddMethod("getOwner", MethodImplementationType.ExtCall, VarKind.Address, new[] { new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.GetTokenOwner");
 					libDecl.AddMethod("transfer", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("to", VarKind.Address), new MethodParameter("symbol", VarKind.String), new MethodParameter("amount", VarKind.Number) }).SetAlias("Runtime.TransferTokens");
 					libDecl.AddMethod("transferAll", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("to", VarKind.Address), new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.TransferBalance");
 					libDecl.AddMethod("mint", MethodImplementationType.ExtCall, VarKind.None, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("to", VarKind.Address), new MethodParameter("symbol", VarKind.String), new MethodParameter("amount", VarKind.Number) }).SetAlias("Runtime.MintTokens");
