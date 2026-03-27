@@ -18,6 +18,7 @@
     
     <ItemGroup>
         <ProjectReference Include="..\src\TOMBLib.csproj" />
+        <ProjectReference Include="..\..\Compiler\TombCompiler.csproj" />
     </ItemGroup>
 
 </Project>

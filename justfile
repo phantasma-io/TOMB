@@ -4,6 +4,7 @@ just:
 
 alias f := format
 alias ff := format-full
+alias pn := publish-nuget
 alias vf := verify-format
 alias vff := verify-format-full
 
@@ -18,3 +19,6 @@ verify-format:
 
 verify-format-full:
 	dotnet format TombCompiler.sln --no-restore --verify-no-changes
+
+publish-nuget:
+	./scripts/publish-nuget.sh

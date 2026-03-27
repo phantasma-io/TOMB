@@ -155,6 +155,21 @@ namespace Phantasma.Tomb
 
 		static void Main(string[] args)
 		{
+			if (args.Length == 1)
+			{
+				if (CliMetadata.IsVersionArgument(args[0]))
+				{
+					CliMetadata.WriteVersion(Console.Out);
+					return;
+				}
+
+				if (CliMetadata.IsHelpArgument(args[0]))
+				{
+					CliMetadata.WriteHelp(Console.Out);
+					return;
+				}
+			}
+
 			string sourceFileName = string.Empty;
 			string outputPath = string.Empty;
 

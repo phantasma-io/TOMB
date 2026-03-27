@@ -4,21 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Title>Phantasma.TOMB</Title>
-    <Description>Provides runtime compilation of TOMB smart contracts and tokens.</Description>
-    <PackageIcon>logo.png</PackageIcon>
-    <Version>1.5.3</Version>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageId>Phantasma.TOMB</PackageId>
-    <RepositoryUrl>https://github.com/phantasma-io/TOMB</RepositoryUrl>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="..\..\logo.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="PhantasmaPhoenix.Core" Version="0.2.5" />

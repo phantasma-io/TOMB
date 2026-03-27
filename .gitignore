@@ -1,3 +1,5 @@
+.env
+output
 .DS_Store
 .vs/
 obj/
