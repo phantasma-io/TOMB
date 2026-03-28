@@ -150,6 +150,45 @@ contract test {
     }
 	}";
 
+private const string TokenOnAttachTriggerContract = @"
+token SATA {
+    import Runtime;
+    property name:string = ""Saturn Attach"";
+    trigger onAttach(from:address)
+    {
+        Runtime.log(""attached"");
+    }
+}";
+
+	private const string TokenOnAttachStatefulContract = @"
+token SATA {
+    import Runtime;
+    global _attached: bool;
+    property name:string = ""Saturn Attach Stateful"";
+    property isFungible: bool = true;
+    property isFinite: bool = true;
+    property maxSupply: number = 123;
+    property decimals: number = 0;
+    public run():number
+    {
+        if (_attached)
+        {
+            return 77;
+        }
+
+        return 7;
+    }
+    trigger onAttach(from:address)
+    {
+        Runtime.expect(Runtime.isWitness(from), ""invalid witness"");
+        _attached = true;
+    }
+    trigger onMint(from:address, to:address, symbol:string, amount:number)
+    {
+        Runtime.expect(amount >= 0, ""invalid amount"");
+    }
+}";
+
 	private const string StorageReadContract = @"
 contract test {
     import Storage;
@@ -434,6 +473,33 @@ contract test {
 		var modules = parser.Process(TokenCreateRuntimeSignatureContract);
 
 		Assert.That(modules.Length, Is.EqualTo(1));
+	}
+
+	[Test]
+	public void TokenOnAttachTrigger_CompilesAndEmitsMethod()
+	{
+		var parser = new TombLangCompiler();
+
+		var modules = parser.Process(TokenOnAttachTriggerContract);
+
+		Assert.That(modules.Length, Is.EqualTo(1));
+		var contract = modules.Single() as Contract;
+		Assert.That(contract, Is.Not.Null);
+		Assert.That(contract!.Methods.ContainsKey("onAttach"), Is.True);
+	}
+
+	[Test]
+	public void TokenOnAttachTrigger_AllowsStatefulPublicMethod()
+	{
+		var parser = new TombLangCompiler();
+
+		var modules = parser.Process(TokenOnAttachStatefulContract);
+
+		Assert.That(modules.Length, Is.EqualTo(1));
+		var contract = modules.Single() as Contract;
+		Assert.That(contract, Is.Not.Null);
+		Assert.That(contract!.Methods.ContainsKey("run"), Is.True);
+		Assert.That(contract!.Methods.ContainsKey("onAttach"), Is.True);
 	}
 
 	[Test]

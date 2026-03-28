@@ -8,6 +8,7 @@ namespace Phantasma.Core.Domain.Triggers.Enums
 		OnSend,
 		OnReceive,
 		OnInfuse,
+		OnAttach,
 		OnUpgrade,
 		OnSeries,
 		OnWrite,
