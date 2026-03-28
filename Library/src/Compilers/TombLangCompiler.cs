@@ -22,6 +22,8 @@ namespace Phantasma.Tomb.Compilers
 	[Compiler(Extension = ".tomb")]
 	public class TombLangCompiler : Compiler
 	{
+		private const int MaxTokenModuleSymbolLength = 255;
+
 		public TombLangCompiler(int version = DomainSettings.LatestKnownProtocol) : base(version)
 		{
 		}
@@ -59,6 +61,30 @@ namespace Phantasma.Tomb.Compilers
 				new StructField("Symbol", VarKind.String),
 				new StructField("Value", VarKind.Number)
 			});
+		}
+
+		private static bool IsValidTokenModuleName(string name)
+		{
+			if (string.IsNullOrEmpty(name))
+			{
+				return false;
+			}
+
+			if (name.Length > MaxTokenModuleSymbolLength)
+			{
+				return false;
+			}
+
+			for (int i = 0; i < name.Length; i++)
+			{
+				var c = name[i];
+				if (c < 'A' || c > 'Z')
+				{
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 
@@ -176,9 +202,10 @@ namespace Phantasma.Tomb.Compilers
 
 							if (firstToken.value == "token")
 							{
-								if (!SdkValidation.IsValidTicker(contractName))
+								if (!IsValidTokenModuleName(contractName))
 								{
-									throw new CompilerException("token does not have a valid name: " + contractName);
+									throw new CompilerException("token does not have a valid symbol: " + contractName +
+										" (tokens use uppercase A-Z symbols; custom contracts use lowercase identifiers)");
 								}
 							}
 							else
@@ -186,6 +213,11 @@ namespace Phantasma.Tomb.Compilers
 								if (!SdkValidation.IsValidIdentifier(contractName))
 								{
 									throw new CompilerException("contract does not have a valid name: " + contractName);
+								}
+
+								if (SdkValidation.IsReservedIdentifier(contractName))
+								{
+									throw new CompilerException($"name '{contractName}' reserved by system");
 								}
 							}
 

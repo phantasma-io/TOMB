@@ -85,6 +85,11 @@ namespace Phantasma.Tomb.Compilers
 								throw new CompilerException("contract does not have a valid name: " + contractName);
 							}
 
+							if (SdkValidation.IsReservedIdentifier(contractName))
+							{
+								throw new CompilerException($"name '{contractName}' reserved by system");
+							}
+
 							module = new Contract(contractName, ModuleKind.Contract);
 
 							foreach (var libName in importedLibraries)
