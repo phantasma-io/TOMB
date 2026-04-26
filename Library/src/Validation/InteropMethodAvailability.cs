@@ -257,8 +257,8 @@ public static class InteropMethodAvailability
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.ReadToken dispatch)"),
 			["Runtime.WriteToken"] = new NativeMethodSnapshotEntry(
-				NativeMethodPresence.Missing,
-				$"{sourceFile} Runtime.WriteToken case currently routes to runtime error (goto error)"),
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.WriteToken dispatch; calls PhantasmaRuntime::WriteToken and OnWrite trigger path)"),
 			["Runtime.TokenExists"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.TokenExists dispatch)"),
