@@ -7,6 +7,18 @@ TOMB is the Phantasma smart-contract compiler.
 - Target VM: Phantasma VM
 - Source files: `.tomb`
 
+## Requirements
+
+The current NuGet tool package is built for `net10.0`. Install the .NET 10 SDK before using `dotnet tool install` or `dotnet tool update`.
+
+Check the SDK selected by your shell:
+
+```bash
+dotnet --version
+```
+
+The command should resolve to a `10.x` SDK. If it resolves to `9.x`, the tool install can fail with a misleading `DotnetToolSettings.xml` error because the package only contains the `net10.0` tool layout.
+
 ## CLI Usage
 
 Install `pha-tomb` as a .NET global tool:
