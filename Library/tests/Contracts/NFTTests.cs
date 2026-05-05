@@ -108,6 +108,49 @@ public testMethod(from:address) : array<number> {
 		Assert.IsTrue(array.Length == 3);
 	}
 
+	[Test]
+	public void GetOwnershipsBySeries()
+	{
+		var sourceCode = @"
+contract test{
+
+import NFT;
+import Array;
+
+public testMethod(from:address) : array<number> {
+    local result: array<number> = NFT.getOwnershipsBySeries(from, ""SOUL"", 4);
+    return result;
+    }
+}";
+
+		var parser = new TombLangCompiler();
+		var contract = parser.Process(sourceCode).First();
+
+		var asm = contract.asm;
+		Debug.WriteLine(asm);
+		Assert.IsTrue(asm.Contains("Runtime.GetOwnershipsBySeries"));
+
+		var storage = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+
+		var keys = PhantasmaKeys.Generate();
+		var method = contract.abi.FindMethod("testMethod");
+		Assert.IsNotNull(method);
+
+		var vm = new TestVM(contract, storage, method);
+		vm.Stack.Push(VMObject.FromObject(keys.Address));
+		var result = vm.Execute();
+		Assert.IsTrue(result == ExecutionState.Halt);
+
+		Assert.IsTrue(vm.Stack.Count == 1);
+
+		var obj = vm.Stack.Pop();
+		var array = obj.ToArray<BigInteger>();
+
+		Assert.IsTrue(array.Length == 2);
+		Assert.IsTrue(array[0] == 456);
+		Assert.IsTrue(array[1] == 789);
+	}
+
 	/*
                [Test]
                public void NFTs()

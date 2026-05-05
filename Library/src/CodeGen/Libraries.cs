@@ -553,6 +553,7 @@ namespace Phantasma.Tomb.CodeGen
 
 					var numberArray = VarType.Find(VarKind.Array, VarType.Find(VarKind.Number));
 					libDecl.AddMethod("getOwnerships", MethodImplementationType.ExtCall, numberArray, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("symbol", VarKind.String) }).SetAlias("Runtime.GetOwnerships");
+					libDecl.AddMethod("getOwnershipsBySeries", MethodImplementationType.ExtCall, numberArray, new[] { new MethodParameter("from", VarKind.Address), new MethodParameter("symbol", VarKind.String), new MethodParameter("seriesID", VarKind.Number) }).SetAlias("Runtime.GetOwnershipsBySeries");
 
 					libDecl.AddMethod("availableSymbols", MethodImplementationType.ExtCall, VarType.FindArray(VarKind.String), new MethodParameter[0] { }).SetAlias("Runtime.GetAvailableNFTSymbols");
 

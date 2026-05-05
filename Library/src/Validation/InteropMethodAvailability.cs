@@ -292,6 +292,9 @@ public static class InteropMethodAvailability
 			["Runtime.GetOwnerships"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,
 				$"implemented in {sourceFile} (Runtime.GetOwnerships dispatch)"),
+			["Runtime.GetOwnershipsBySeries"] = new NativeMethodSnapshotEntry(
+				NativeMethodPresence.Available,
+				$"implemented in {sourceFile} (Runtime.GetOwnershipsBySeries dispatch)"),
 
 			["Nexus.CreateToken"] = new NativeMethodSnapshotEntry(
 				NativeMethodPresence.Available,

@@ -48,6 +48,7 @@ public class TestVM : VirtualMachine
 		RegisterMethod("Runtime.Context", Runtime_Context);
 		RegisterMethod("Runtime.ReadInfusions", Runtime_ReadInfusions);
 		RegisterMethod("Runtime.GetOwnerships", Runtime_GetOwnerships);
+		RegisterMethod("Runtime.GetOwnershipsBySeries", Runtime_GetOwnershipsBySeries);
 		RegisterMethod("Runtime.GetTokenOwner", Runtime_GetTokenOwner);
 		RegisterMethod("Runtime.Notify", Runtime_Notify);
 
@@ -197,6 +198,22 @@ public class TestVM : VirtualMachine
 		var symbol = vm.PopString("symbol");
 
 		var array = new BigInteger[] { 123, 456, 789 };
+
+		var val = VMObject.FromArray(array);
+		this.Stack.Push(val);
+
+		return ExecutionState.Running;
+	}
+
+	private ExecutionState Runtime_GetOwnershipsBySeries(VirtualMachine vm)
+	{
+		vm.Stack.Pop();
+		_ = vm.PopString("symbol");
+		var seriesID = vm.PopNumber("seriesID");
+
+		var array = seriesID == 4
+			? new BigInteger[] { 456, 789 }
+			: Array.Empty<BigInteger>();
 
 		var val = VMObject.FromArray(array);
 		this.Stack.Push(val);
